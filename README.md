@@ -1,1 +1,3 @@
-# Tradução para Português Brasileiro das RFCs do PHP
+# php-rfc-doc-br
+
+Tradução das RFCs do PHP para português brasileiro.
