@@ -8,3 +8,5 @@ INHERIT: !ENV MKDOCS_BASE_CONFIG
 
 nav:
   - RFCs do PHP: index.md
+  - Em Fase de Votação:
+      - Analisadores SQL específicos do Driver PDO: analisadores-sql-especificos-do-driver-pdo.md
