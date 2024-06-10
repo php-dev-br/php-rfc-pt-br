@@ -1,6 +1,6 @@
 <!-- source_url: https://wiki.php.net/rfc/pdo_driver_specific_parsers?rev=1717399473&do=export_raw -->
-<!-- revision: 1717399473 -->
-<!-- status: wip -->
+<!-- revision: 1718026107 -->
+<!-- status: ready -->
 
 # Analisadores SQL específicos do _driver_ PDO
 
@@ -22,20 +22,20 @@ espaços reservados para parâmetros dentro de consultas (ou seja, `?` e
 `:paramName`), para saber quantos e quais parâmetros esperar para uma consulta,
 e passar as informações para o driver PDO em uso.
 
-Este analisador foi historicamente modelado para funcionar com o que era o
-padrão SQL de fato no ecossistema PHP da época: MySQL.
+Este analisador foi historicamente modelado para funcionar com o SQL padrão de
+fato no ecossistema PHP da época: MySQL.
 No entanto, o dialeto SQL usado pelo MySQL lida com literais de _string_ de
-forma diferente do padrão SQL, seguido por outros fornecedores de banco de
+forma diferente do SQL padrão, seguido por outros fornecedores de banco de
 dados, como PostgreSQL e SQLite.
 
 Especificamente, o MySQL trata o caractere de barra invertida como um caractere
 de escape:
 
-```php
+```mysql
 'This \'word\' is a single quoted'
 ```
 
-Ao passo que o padrão SQL usa aspas simples duplas:
+Ao passo que o SQL padrão usa aspas simples duplas:
 
 ```sql
 'This ''word'' is a single quoted'
@@ -53,8 +53,8 @@ SELECT 'foo\' AS a, '?' AS b
 
 fará com que o PDO considere `'foo\' AS a, '` como uma _string_ literal e
 analise o `?` seguinte como um espaço reservado para parâmetro posicional.
-Na verdade, se você prestar muita atenção, até mesmo o formatador de código SQL
-do DocuWiki fica confuso com este exemplo.
+Na verdade, se você prestar bastante atenção, até mesmo o formatador de código
+SQL do DocuWiki fica confuso com este exemplo.
 
 Temos vários relatos de falhas semelhantes
 <sup>
@@ -87,7 +87,7 @@ dialeto SQL específico e:
 1. Alterar o
    [
    _scanner_ PDO padrão](https://github.com/php/php-src/blob/ab589e4481f0cf35c8773e0c64dccc35b8870ae1/ext/pdo/pdo_sql_parser.re#L42)
-   para esperar apenas padrão SQL:
+   para esperar apenas SQL padrão:
     1. literais entre aspas simples e duplas, com duplicação como mecanismo de
        escape
     2. comentários com dois traços e no estilo C (não aninhados, pois parece ser
@@ -118,7 +118,7 @@ dialeto SQL específico e:
     4. testes, conforme necessário
 
 Para manter a mudança o mais simples possível, a proposta tenta cobrir a sintaxe
-padrão SQL para cada banco de dados o mais próximo possível, sem grandes
+SQL padrão para cada banco de dados o mais próximo possível, sem grandes
 alterações no código do analisador comum.
 
 Uma coisa importante a mencionar é que as alterações propostas visam apenas a
@@ -177,7 +177,7 @@ and is deprecated.
 Essa compatibilidade com versões anteriores pode ser removida na próxima versão
 principal.
 
-## Pesquisa sobre literais de _string_, identificadores e comentários
+## Pesquisa Sobre Literais de _String_, Identificadores e Comentários
 
 ### MySQL
 
@@ -207,8 +207,8 @@ Todos os tipos de comentários serão suportados.
 ### PostgreSQL
 
 O escape evoluiu ao longo dos anos.
-Historicamente, foi aceito `\'`, mas começou mudar gradualmente para o SQL
-padrão por volta de 2005, saindo da memória.
+Historicamente, foi aceito `\'`, mas começou mudar gradualmente para o padrão
+SQL por volta de 2005, saindo da memória.
 Desde a versão 9.1 (2011+), ele aceita apenas literais de _string_ entre aspas
 simples por padrão, conforme o padrão SQL.
 Consulte
@@ -257,10 +257,10 @@ comentários aninhados não seja introduzido.
 Segue o padrão SQL e requer aspas simples duplas para representar as aspas
 simples em uma _string_ literal.
 Consulte a
-[documentação](https://www.sqlite.org/lang_expr.html#literal_values_constants).
+[documentação](https://www.sqlite.org/lang_expr.html#literal_values_constants_).
 
 No entanto, ele aceitará _strings_ entre aspas duplas como literais de _string_
-sob
+em
 [certas circunstâncias](https://www.sqlite.org/quirks.html#double_quoted_string_literals_are_accepted).
 
 Identificadores entre aspas duplas, mas também
@@ -275,7 +275,7 @@ Todos os tipos de comentários já são suportados.
 
 ### SQL Server
 
-Literais de _string_ padrão SQL, conforme a
+Literais de _string_ do padrão SQL, conforme a
 [documentação](https://learn.microsoft.com/en-us/sql/t-sql/data-types/constants-transact-sql?view=sql-server-ver16#character-string-constants).
 
 Dependendo da configuração `QUOTED_IDENTIFIER`, aspas duplas são usadas para
@@ -285,12 +285,12 @@ _strings_ ou identificadores.
 quase padrão SQL: `--` e `/* */` (não aninhados).
 
 Nenhum analisador personalizado está planejado nesta RFC: o _scanner_ padrão
-será usado por padrão, trazendo compatibilidade para literais de _string_ padrão
-SQL, identificadores e comentários.
+será usado por padrão, trazendo compatibilidade para literais de _string_,
+identificadores e comentários do padrão SQL.
 
 ### Firebird
 
-Literais de _string_ padrão SQL, conforme a
+Literais de _string_ do padrão SQL, conforme a
 [documentação](https://firebirdsql.org/file/documentation/chunk/en/refdocs/fblangref40/fblangref40-commons.html#fblangref40-commons-constants).
 Ele também oferece suporte a _strings_ hexadecimais (binárias), por exemplo,
 `x'50444F'` e, semelhantemente ao Oracle, _strings_ entre aspas (fora do
@@ -304,17 +304,17 @@ identificadores."
 quase padrão SQL: `--` e `/* */` (não aninhados).
 
 Nenhum analisador personalizado está planejado nesta RFC: o _scanner_ padrão
-será usado por padrão, trazendo compatibilidade para literais de _string_ padrão
-SQL, identificadores e comentários.
+será usado por padrão, trazendo compatibilidade para literais de _string_,
+identificadores e comentários do padrão SQL.
 
 ### ODBC
 
 Como o ODBC pode se conectar a vários tipos de bancos de dados, esperamos que o
-analisador padrão SQL seja suficiente.
+analisador do padrão SQL seja suficiente.
 
 ### Oracle
 
-Literais de _string_ padrão SQL, conforme a
+Literais de _string_ do padrão SQL, conforme a
 [documentação](https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/Literals.html).
 Ele também suporta delimitações alternativas, por exemplo, `q'<literal>'` e
 muitas outras variantes, o que está fora do escopo desta RFC.
@@ -325,8 +325,8 @@ muitas outras variantes, o que está fora do escopo desta RFC.
 quase padrão SQL: `--` e `/* */` (não aninhados).
 
 O _driver_ OCI pode ser encontrado no PECL: o _scanner_ padrão será usado por
-padrão, trazendo compatibilidade para literais de _string_ padrão SQL,
-identificadores e comentários.
+padrão, trazendo compatibilidade para literais de _string_, identificadores e
+comentários do padrão SQL.
 
 ## Contexto Histórico
 
