@@ -1,6 +1,9 @@
-<!-- source_url: https://wiki.php.net/rfc/pdo_driver_specific_parsers?rev=1717399473&do=export_raw -->
-<!-- revision: 1718026107 -->
-<!-- status: ready -->
+---
+source_url: https://wiki.php.net/rfc/pdo_driver_specific_parsers?rev=1717399473&do=export_raw
+revision: 1718026107
+status: ready
+license: https://www.php.net/copyright
+---
 
 # Analisadores SQL específicos do _driver_ PDO
 
@@ -370,9 +373,9 @@ A última vez que isso aconteceu foi no PHP 7.2 com a RFC
 [Tipos de
 _String_ Estendidos para o PDO](https://wiki.php.net/rfc/extended-string-types-for-pdo).
 
-### Para Opcache
+### Para `Opcache`
 
-Nenhum impacto no opcache.
+Nenhum impacto no `opcache`.
 
 ### Novas Constantes
 

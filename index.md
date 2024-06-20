@@ -1,6 +1,9 @@
-<!-- source_url: https://wiki.php.net/rfc?rev=1717575132&do=export_raw -->
-<!-- revision: 1717575132 -->
-<!-- status: wip -->
+---
+source_url: https://wiki.php.net/rfc
+revision: 1718797708
+status: ready
+license: https://www.php.net/copyright
+---
 
 # RFCs do PHP
 
@@ -23,27 +26,25 @@ Personalize conforme necessário.
 
 Esta seção é para RFCs que estão sendo votadas atualmente.
 
-* [Analisadores SQL específicos do driver PDO](analisadores-sql-especificos-do-driver-pdo.md)
-    * Criada em 11/04/2024.
-    * Discussão iniciada em 17/04/2024.
-    * Votação iniciada em 03/06/2024.
-    * Votação termina em 17/06/2024.
+* [New ext-dom features in PHP 8.4](https://wiki.php.net/rfc/dom_additions_84)
+    * Discussão iniciada em 22/05/2024.
+    * Votação iniciada em 10/06/2024.
+* [Adicionar Métodos de Abertura de Fluxo ao XML{Reader,Writer}](rfc/adicionar-metodos-de-abertura-de-fluxo-ao-xml-reader-e-writer.md)
+    * Criada em 21/04/2024.
+    * Discussão iniciada em 22/04/2024.
+    * Votação iniciada em 13/06/2024.
 
 ## Em Discussão
 
 Esta seção é para RFCs que foram anunciadas na lista de discussão "internals" do
 PHP.
 
+* [Static Constructor][rfc-static-constructor] (Created 2024-06-18)
 * [Lazy Objects][rfc-lazy-objects] (Created 2024-06-03)
 * [Correctly name the rounding mode and make it an Enum][rfc-correctly-name-the-rounding-mode-and-make-it-an-enum] (
   Created 2024-04-21)
 * [Asymmetric visibility v2][rfc-asymmetric-visibility-v2] (Created 2024-05-09)
-* [New ext-dom features in PHP 8.4][rfc-dom-additions-84] (Discussion started:
-  2024-05-22)
-* [Transform exit() from a language construct into a standard function][rfc-exit-as-function] (
-  Discussion started: 2024-05-08)
-* [Add openStream() to XML{Reader,Writer}][rfc-xmlreader-writer-streams] (
-  Created 2024-04-21, Discussion started: 2024-04-22)
+* [Transform exit() from a language construct into a standard function][rfc-exit-as-function] (Discussion started: 2024-05-08)
 * [OOP API for cURL extension][rfc-curl-oop] (Created 2024-02-14, Discussion
   started: 2024-02-14)
 * [NotSerializable attribute][rfc-not-serializable] (created 2023-11-26,
@@ -103,7 +104,7 @@ PHP.
 ## Em Rascunho
 
 Esta seção é para rascunhos iniciais de RFCs que NÃO foram anunciadas na lista
-de discussão "internals" do PHP.
+de discussão `internals` do PHP.
 
 * [PHP License Update][rfc-php-license-update] (Created 2024-05-09)
 * [Change the default of $characters in mb_trim function][rfc-mb-trim-change-characters] (
@@ -295,6 +296,11 @@ depois.
   Created 2023-08-27)
 * [Raising zero to the power of negative number][rfc-raising-zero-to-power-of-negative-number] (
   Created 2024-01-11)
+* [Analisadores SQL específicos do driver PDO](rfc/analisadores-sql-especificos-do-driver-pdo.md)
+    * Criada em 11/04/2024.
+    * Discussão iniciada em 17/04/2024.
+    * Votação iniciada em 03/06/2024.
+    * Aprovada em 17/06/2024.
 
 ### PHP 8.3
 
@@ -1843,6 +1849,8 @@ volta para a seção apropriada.
 
 [rfc-array-delete]: https://wiki.php.net/rfc/array_delete
 
+[rfc-array-find]: https://wiki.php.net/rfc/array_find
+
 [rfc-array-group]: https://wiki.php.net/rfc/array_group
 
 [rfc-array-key-first-last-index-add-array-key-first-last]: https://wiki.php.net/rfc/array_key_first_last_index%7CAdd+array_key_%28first%7Clast
@@ -1866,6 +1874,8 @@ volta para a seção apropriada.
 [rfc-assert-string-eval-cleanup]: https://wiki.php.net/rfc/assert-string-eval-cleanup
 
 [rfc-ast-based-parsing-compilation-process-moving-to-an-ast-based-parsing-compilation-process-obsolete-proposal-for-ast-based-compilation-process-superseded-by-the-rfc-abstract-syntax-tree]: https://wiki.php.net/rfc/ast_based_parsing_compilation_process%7CMoving+to+an+AST-based+parsing%2Fcompilation+process+%28obsolete%29%5D%5D%5C%5C+Proposal+for+AST-based+compilation+process.+Superseded+by+the+%5B%5Brfc%3Aabstract_syntax_tree
+
+[rfc-asymmetric-visibility-v2]: https://wiki.php.net/rfc/asymmetric-visibility-v2
 
 [rfc-asymmetric-visibility]: https://wiki.php.net/rfc/asymmetric-visibility
 
@@ -1957,6 +1967,8 @@ volta para a seção apropriada.
 
 [rfc-class-name-scalars]: https://wiki.php.net/rfc/class_name_scalars
 
+[rfc-class-naming-acronyms]: https://wiki.php.net/rfc/class-naming-acronyms
+
 [rfc-class-naming]: https://wiki.php.net/rfc/class-naming
 
 [rfc-cli-process-title]: https://wiki.php.net/rfc/cli_process_title
@@ -1988,6 +2000,8 @@ volta para a seção apropriada.
 [rfc-comparable]: https://wiki.php.net/rfc/comparable
 
 [rfc-comparator-interface]: https://wiki.php.net/rfc/comparator_interface
+
+[rfc-complete-callstatc-magic]: https://wiki.php.net/rfc/complete_callstatc_magic
 
 [rfc-comprehensions]: https://wiki.php.net/rfc/comprehensions
 
@@ -2029,6 +2043,8 @@ volta para a seção apropriada.
 
 [rfc-core-autoloading]: https://wiki.php.net/rfc/core-autoloading
 
+[rfc-correctly-name-the-rounding-mode-and-make-it-an-enum]: https://wiki.php.net/rfc/correctly_name_the_rounding_mode_and_make_it_an_enum
+
 [rfc-counting-non-countables]: https://wiki.php.net/rfc/counting_non_countables
 
 [rfc-covariant-returns-and-contravariant-parameters]: https://wiki.php.net/rfc/covariant-returns-and-contravariant-parameters
@@ -2040,6 +2056,8 @@ volta para a seção apropriada.
 [rfc-curl-file-upload]: https://wiki.php.net/rfc/curl-file-upload
 
 [rfc-curl-http2-push]: https://wiki.php.net/rfc/curl_http2_push
+
+[rfc-curl-oop]: https://wiki.php.net/rfc/curl-oop
 
 [rfc-curl-setopt-strict-types]: https://wiki.php.net/rfc/curl_setopt_strict_types
 
@@ -2075,6 +2093,8 @@ volta para a seção apropriada.
 
 [rfc-declare-vars]: https://wiki.php.net/rfc/declare_vars
 
+[rfc-dedicated-stream-bucket]: https://wiki.php.net/rfc/dedicated_stream_bucket
+
 [rfc-default-ctor]: https://wiki.php.net/rfc/default_ctor
 
 [rfc-default-encoding]: https://wiki.php.net/rfc/default_encoding
@@ -2099,9 +2119,15 @@ volta para a seção apropriada.
 
 [rfc-deprecate-dollar-brace-string-interpolation]: https://wiki.php.net/rfc/deprecate_dollar_brace_string_interpolation
 
+[rfc-deprecate-dollar-brace-string-interpolation]: https://wiki.php.net/rfc/deprecate_dollar_brace_string_interpolation
+
 [rfc-deprecate-dynamic-properties]: https://wiki.php.net/rfc/deprecate_dynamic_properties
 
 [rfc-deprecate-functions-with-overloaded-signatures]: https://wiki.php.net/rfc/deprecate_functions_with_overloaded_signatures
+
+[rfc-deprecate-get-post-sessions]: https://wiki.php.net/rfc/deprecate-get-post-sessions
+
+[rfc-deprecate-implicitly-nullable-types]: https://wiki.php.net/rfc/deprecate-implicitly-nullable-types
 
 [rfc-deprecate-inconsistent-cast-keywords]: https://wiki.php.net/rfc/deprecate-inconsistent-cast-keywords
 
@@ -2211,6 +2237,8 @@ volta para a seção apropriada.
 
 [rfc-exception-bt-provide-object]: https://wiki.php.net/rfc/exception_bt_provide_object
 
+[rfc-exit-as-function]: https://wiki.php.net/rfc/exit-as-function
+
 [rfc-expectations]: https://wiki.php.net/rfc/expectations
 
 [rfc-explicit-octal-notation]: https://wiki.php.net/rfc/explicit_octal_notation
@@ -2238,6 +2266,8 @@ volta para a seção apropriada.
 [rfc-file-descriptor-function]: https://wiki.php.net/rfc/file-descriptor-function
 
 [rfc-final-anonymous-classes]: https://wiki.php.net/rfc/final_anonymous_classes
+
+[rfc-final-by-default-anonymous-classes]: https://wiki.php.net/rfc/final_by_default_anonymous_classes
 
 [rfc-final-class-const]: https://wiki.php.net/rfc/final_class_const
 
@@ -2305,6 +2335,8 @@ volta para a seção apropriada.
 
 [rfc-gmp-number]: https://wiki.php.net/rfc/gmp_number
 
+[rfc-grapheme-str-split]: https://wiki.php.net/rfc/grapheme_str_split
+
 [rfc-grisu3-strtod]: https://wiki.php.net/rfc/grisu3-strtod
 
 [rfc-group-use-declarations]: https://wiki.php.net/rfc/group_use_declarations
@@ -2318,6 +2350,8 @@ volta para a seção apropriada.
 [rfc-heredoc-with-double-quotes]: https://wiki.php.net/rfc/heredoc-with-double-quotes
 
 [rfc-horizontalreuse]: https://wiki.php.net/rfc/HorizontalReuse
+
+[rfc-http-last-response-headers-add-http-get]: https://wiki.php.net/rfc/http-last-response-headers%7CAdd+http_%28get
 
 [rfc-ifsetor]: https://wiki.php.net/rfc/ifsetor
 
@@ -2459,6 +2493,8 @@ volta para a seção apropriada.
 
 [rfc-language-constructs-syntax-changes]: https://wiki.php.net/rfc/language-constructs-syntax-changes
 
+[rfc-lazy-objects]: https://wiki.php.net/rfc/lazy-objects
+
 [rfc-ldap-exop]: https://wiki.php.net/rfc/ldap_exop
 
 [rfc-ldap-modify-batch]: https://wiki.php.net/rfc/ldap_modify_batch
@@ -2525,7 +2561,11 @@ volta para a seção apropriada.
 
 [rfc-mb-str-split]: https://wiki.php.net/rfc/mb_str_split
 
+[rfc-mb-trim-change-characters]: https://wiki.php.net/rfc/mb_trim_change_characters
+
 [rfc-mb-trim]: https://wiki.php.net/rfc/mb_trim
+
+[rfc-mb-ucfirst]: https://wiki.php.net/rfc/mb_ucfirst
 
 [rfc-mcrypt-viking-funeral]: https://wiki.php.net/rfc/mcrypt-viking-funeral
 
@@ -2593,6 +2633,8 @@ volta para a seção apropriada.
 
 [rfc-new-rounding-modes-to-round-function]: https://wiki.php.net/rfc/new_rounding_modes_to_round_function
 
+[rfc-new-without-parentheses]: https://wiki.php.net/rfc/new_without_parentheses
+
 [rfc-newinis]: https://wiki.php.net/rfc/newinis
 
 [rfc-non-capturing-catches]: https://wiki.php.net/rfc/non-capturing_catches
@@ -2606,6 +2648,8 @@ volta para a seção apropriada.
 [rfc-normalize-array-auto-increment-on-copy-on-write]: https://wiki.php.net/rfc/normalize-array-auto-increment-on-copy-on-write
 
 [rfc-normalize-inc-dec]: https://wiki.php.net/rfc/normalize_inc_dec
+
+[rfc-not-serializable]: https://wiki.php.net/rfc/not_serializable
 
 [rfc-notice-for-non-valid-array-container]: https://wiki.php.net/rfc/notice-for-non-valid-array-container
 
@@ -2663,6 +2707,8 @@ volta para a seção apropriada.
 
 [rfc-operator-overloading-gmp]: https://wiki.php.net/rfc/operator_overloading_gmp
 
+[rfc-opt-in-dom-spec-compliance]: https://wiki.php.net/rfc/opt_in_dom_spec_compliance
+
 [rfc-optimizerplus]: https://wiki.php.net/rfc/optimizerplus
 
 [rfc-optional-t-function]: https://wiki.php.net/rfc/optional-t-function
@@ -2717,6 +2763,8 @@ volta para a seção apropriada.
 
 [rfc-php-engine-constant]: https://wiki.php.net/rfc/php_engine_constant
 
+[rfc-php-license-update]: https://wiki.php.net/rfc/php_license_update
+
 [rfc-php-namespace-in-core]: https://wiki.php.net/rfc/php-namespace-in-core
 
 [rfc-php-namespace-policy]: https://wiki.php.net/rfc/php_namespace_policy
@@ -2751,6 +2799,8 @@ volta para a seção apropriada.
 
 [rfc-pipe-operator]: https://wiki.php.net/rfc/pipe-operator
 
+[rfc-policy-repository]: https://wiki.php.net/rfc/policy-repository
+
 [rfc-pow-operator]: https://wiki.php.net/rfc/pow-operator
 
 [rfc-precise-float-value]: https://wiki.php.net/rfc/Precise+float+value
@@ -2764,6 +2814,8 @@ volta para a seção apropriada.
 [rfc-prevent-disruptions-of-conversations]: https://wiki.php.net/rfc/prevent_disruptions_of_conversations
 
 [rfc-println]: https://wiki.php.net/rfc/println
+
+[rfc-promote-php-foundation]: https://wiki.php.net/rfc/promote_php_foundation
 
 [rfc-proper-range-semantics]: https://wiki.php.net/rfc/proper-range-semantics
 
@@ -2790,6 +2842,8 @@ volta para a seção apropriada.
 [rfc-prototype-checks]: https://wiki.php.net/rfc/prototype_checks
 
 [rfc-pure-intersection-types]: https://wiki.php.net/rfc/pure-intersection-types
+
+[rfc-raising-zero-to-power-of-negative-number]: https://wiki.php.net/rfc/raising_zero_to_power_of_negative_number
 
 [rfc-random-ext]: https://wiki.php.net/rfc/random_ext
 
@@ -3009,6 +3063,8 @@ volta para a seção apropriada.
 
 [rfc-static-classes]: https://wiki.php.net/rfc/static-classes
 
+[rfc-static-constructor]: https://wiki.php.net/rfc/static_constructor
+
 [rfc-static-return-type]: https://wiki.php.net/rfc/static_return_type
 
 [rfc-static-variable-inheritance]: https://wiki.php.net/rfc/static_variable_inheritance
@@ -3036,6 +3092,8 @@ volta para a seção apropriada.
 [rfc-strtolower-ascii]: https://wiki.php.net/rfc/strtolower-ascii
 
 [rfc-structural-typing-for-closures]: https://wiki.php.net/rfc/structural-typing-for-closures
+
+[rfc-support-object-type-in-bcmath]: https://wiki.php.net/rfc/support_object_type_in_bcmath
 
 [rfc-switch-expression-and-statement-improvement]: https://wiki.php.net/rfc/switch-expression-and-statement-improvement
 
