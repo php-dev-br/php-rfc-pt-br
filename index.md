@@ -26,7 +26,7 @@ Personalize conforme necessário.
 
 Esta seção é para RFCs que estão sendo votadas atualmente.
 
-* [New ext-dom features in PHP 8.4](https://wiki.php.net/rfc/dom_additions_84)
+* [Novos Recursos da `ext-dom` no PHP 8.4](rfc/novos-recursos-da-ext-dom-no-php-8.4.md)
     * Discussão iniciada em 22/05/2024.
     * Votação iniciada em 10/06/2024.
 * [Adicionar Métodos de Abertura de Fluxo ao XML{Reader,Writer}](rfc/adicionar-metodos-de-abertura-de-fluxo-ao-xml-reader-e-writer.md)
