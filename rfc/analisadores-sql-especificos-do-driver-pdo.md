@@ -1,29 +1,28 @@
 ---
-source_url: https://wiki.php.net/rfc/pdo_driver_specific_parsers?rev=1717399473&do=export_raw
-revision: 1718026107
+source_url: https://wiki.php.net/rfc/pdo_driver_specific_parsers
+revision: 1718723742
 status: ready
 license: https://www.php.net/copyright
 ---
 
-# Analisadores SQL específicos do _driver_ PDO
+# Analisadores SQL Específicos do _Driver_ PDO
 
 * Versão: 1.0
 * Data: 11/04/2024
 * Pessoas autoras: Matteo Beccati, mbeccati@php.net
-* Situação: Em votação
-* Discussão:
-  [https://externals.io/message/123141](https://externals.io/message/123141)
+* Situação: Implementada
+* Versão alvo: 8.4
+* Implementação:
+  [https://github.com/php/php-src/commit/fbe317bf2179c65b750cc945c3530b28db1670e0](https://github.com/php/php-src/commit/fbe317bf2179c65b750cc945c3530b28db1670e0)
 * Publicada pela primeira vez em:
   [https://wiki.php.net/rfc/pdo_driver_specific_parsers](https://wiki.php.net/rfc/pdo_driver_specific_parsers)
-* Implementação:
-  [https://github.com/php/php-src/pull/14035](https://github.com/php/php-src/pull/14035)
 
 ## Introdução
 
 A extensão PDO contém um analisador SQL, cujo objetivo principal é reconhecer
 espaços reservados para parâmetros dentro de consultas (ou seja, `?` e
 `:paramName`), para saber quantos e quais parâmetros esperar para uma consulta,
-e passar as informações para o driver PDO em uso.
+e passar as informações para o _driver_ PDO em uso.
 
 Este analisador foi historicamente modelado para funcionar com o SQL padrão de
 fato no ecossistema PHP da época: MySQL.
@@ -57,7 +56,7 @@ SELECT 'foo\' AS a, '?' AS b
 fará com que o PDO considere `'foo\' AS a, '` como uma _string_ literal e
 analise o `?` seguinte como um espaço reservado para parâmetro posicional.
 Na verdade, se você prestar bastante atenção, até mesmo o formatador de código
-SQL do DocuWiki fica confuso com este exemplo.
+SQL da DocuWiki fica confuso com este exemplo.
 
 Temos vários relatos de falhas semelhantes
 <sup>
@@ -348,8 +347,9 @@ com escape dentro de _strings_ delimitadas por cifrão" descrita anteriormente.
 
 As pessoas usuárias que possuem aplicações que podem trabalhar com vários
 motores de banco de dados ainda devem ter muito cuidado e escrever consultas
-portáteis, possivelmente usando o método `PDO::quote()` quando necessário, em
-vez de codificar _strings_ contendo caracteres de escape.
+portáteis, possivelmente usando o método
+[`PDO::quote()`](/docs/php/doc/8/pdo.quote.html) quando necessário, em vez de
+codificar _strings_ contendo caracteres de escape.
 
 ## Versões propostas do PHP
 
@@ -373,7 +373,7 @@ A última vez que isso aconteceu foi no PHP 7.2 com a RFC
 [Tipos de
 _String_ Estendidos para o PDO](https://wiki.php.net/rfc/extended-string-types-for-pdo).
 
-### Para `Opcache`
+### Para o `OPcache`
 
 Nenhum impacto no `opcache`.
 
@@ -418,17 +418,44 @@ A votação estará aberta até segunda-feira, 17 de junho de 2024 às 15h00 UTC
 Como habitualmente, é necessária uma maioria de 2/3 para que esta proposta seja
 aceita.
 
-<!--
-TODO: Add doodle.
-<doodle title="Implement PDO Driver specific SQL parsers?" auth="mbeccati" voteType="single" closed="false" closeon="2024-06-17T15:00:00Z">
-   * Yes
-   * No
-</doodle>
--->
+### Implementar analisadores SQL específicos do driver PDO?
+
+| Nome                                                                        | Sim | Não |
+|-----------------------------------------------------------------------------|:---:|:---:|
+| [adiel](https://people.php.net/adiel) (adiel)                               |  X  |     |
+| [ashnazg](https://people.php.net/ashnazg) (ashnazg)                         |  X  |     |
+| [crell](https://people.php.net/crell) (crell)                               |  X  |     |
+| [derick](https://people.php.net/derick) (derick)                            |  X  |     |
+| [dharman](https://people.php.net/dharman) (dharman)                         |  X  |     |
+| [didou](https://people.php.net/didou) (didou)                               |  X  |     |
+| [ericmann](https://people.php.net/ericmann) (ericmann)                      |  X  |     |
+| [galvao](https://people.php.net/galvao) (galvao)                            |  X  |     |
+| [heiglandreas](https://people.php.net/heiglandreas) (heiglandreas)          |  X  |     |
+| [jimw](https://people.php.net/jimw) (jimw)                                  |  X  |     |
+| [kalle](https://people.php.net/kalle) (kalle)                               |  X  |     |
+| [kguest](https://people.php.net/kguest) (kguest)                            |  X  |     |
+| [kocsismate](https://people.php.net/kocsismate) (kocsismate)                |  X  |     |
+| [lufei](https://people.php.net/lufei) (lufei)                               |  X  |     |
+| [mauricio](https://people.php.net/mauricio) (mauricio)                      |  X  |     |
+| [mbeccati](https://people.php.net/mbeccati) (mbeccati)                      |  X  |     |
+| [mcmic](https://people.php.net/mcmic) (mcmic)                               |  X  |     |
+| [ocramius](https://people.php.net/ocramius) (ocramius)                      |  X  |     |
+| [petk](https://people.php.net/petk) (petk)                                  |  X  |     |
+| [ramsey](https://people.php.net/ramsey) (ramsey)                            |  X  |     |
+| [reywob](https://people.php.net/reywob) (reywob)                            |  X  |     |
+| [santiagolizardo](https://people.php.net/santiagolizardo) (santiagolizardo) |  X  |     |
+| [sergey](https://people.php.net/sergey) (sergey)                            |  X  |     |
+| [theodorejb](https://people.php.net/theodorejb) (theodorejb)                |  X  |     |
+| [timwolla](https://people.php.net/timwolla) (timwolla)                      |  X  |     |
+| [weierophinney](https://people.php.net/weierophinney) (weierophinney)       |  X  |     |
+| [wez](https://people.php.net/wez) (wez)                                     |  X  |     |
+| **Resultado final**                                                         | 27  |  0  |
+
+Esta enquete foi encerrada.
 
 ## _Patches_ e Testes
 
-[Pull request da implementação](https://github.com/php/php-src/pull/14035).
+[_Pull request_ da implementação](https://github.com/php/php-src/pull/14035).
 
 ## Referências
 
@@ -436,7 +463,7 @@ TODO: Add doodle.
 * [2] [https://bugs.php.net/bug.php?id=79276](https://bugs.php.net/bug.php?id=79276)
 * [3] [https://bugs.php.net/bug.php?id=80340](https://bugs.php.net/bug.php?id=80340)
 * [4] [RFC PHP: Escapar o espaço reservado para parâmetro `?` no PDO](https://wiki.php.net/rfc/pdo_escape_placeholders)
-* [5] [Implementação prova de conceito de um
+* [5] [Implementação da prova de conceito de um
   _scanner_ `pdo_pgsql` personalizado](https://github.com/php/php-src/pull/6852)
 * [6] [Discussão anterior do tópico na lista
   _internals_](https://externals.io/message/114016)

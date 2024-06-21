@@ -296,7 +296,7 @@ depois.
   Created 2023-08-27)
 * [Raising zero to the power of negative number][rfc-raising-zero-to-power-of-negative-number] (
   Created 2024-01-11)
-* [Analisadores SQL específicos do driver PDO](rfc/analisadores-sql-especificos-do-driver-pdo.md)
+* [Analisadores SQL Específicos do Driver PDO](rfc/analisadores-sql-especificos-do-driver-pdo.md)
     * Criada em 11/04/2024.
     * Discussão iniciada em 17/04/2024.
     * Votação iniciada em 03/06/2024.

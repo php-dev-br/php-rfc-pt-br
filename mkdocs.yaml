@@ -13,4 +13,4 @@ nav:
       - Adicionar Métodos de Abertura de Fluxo ao XML{Reader,Writer}: rfc/adicionar-metodos-de-abertura-de-fluxo-ao-xml-reader-e-writer.md
   - Implementadas:
       - PHP 8.4:
-          - Analisadores SQL específicos do Driver PDO: rfc/analisadores-sql-especificos-do-driver-pdo.md
+          - Analisadores SQL Específicos do Driver PDO: rfc/analisadores-sql-especificos-do-driver-pdo.md
