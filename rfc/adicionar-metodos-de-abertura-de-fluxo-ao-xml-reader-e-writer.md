@@ -16,18 +16,22 @@ license: https://www.php.net/copyright
 
 ## Introdução
 
-As classes `XMLReader` e `XMLWriter` lidam com XML de maneira orientada a fluxo.
-O primeiro implementa um analisador _pull_ XML.
-Isso significa que, em vez de manter os dados na memória ou construir uma árvore
+As classes [`XMLReader`](/docs/php/doc/8/class.xmlreader.html) e
+[`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html) lidam com XML de maneira
+orientada a fluxo.
+A primeira implementa um analisador _pull_ XML.
+Isso significa que, em vez de manter os dados na memória ou construir a árvore
 do documento, o documento é transmitido e a pessoa desenvolvedora pode instruir
-o `XMLReader` a analisar fragmentos no cursor atual e processar ou ignorar os
-dados.
+a classe [`XMLReader`](/docs/php/doc/8/class.xmlreader.html) a analisar
+fragmentos no cursor atual e processar ou ignorar os dados.
 A vantagem é que pessoas desenvolvedoras podem processar e filtrar documentos
 grandes exigindo poucos recursos.
-Ele é mais frequentemente usado como um bloco de construção de baixo nível para
+Ela é mais frequentemente usada como um bloco de construção de baixo nível para
 manipulação mais complexa de grandes documentos XML.
-Da mesma forma, o `XMLWriter` grava um documento XML em um fluxo ou na memória
-usando métodos como `startElement` e `writeElement`.
+Da mesma forma, a classe [`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html)
+grava um documento XML em um fluxo ou na memória usando métodos como
+[`startElement`](/docs/php/doc/8/xmlwriter.startelement.html) e
+[`writeElement`](/docs/php/doc/8/xmlwriter.writeelement.html).
 
 Há, no entanto, uma estranha limitação para estas classes: elas não podem operar
 em um fluxo já aberto!
@@ -38,9 +42,10 @@ requisições HTTP, dados passados de um _framework_ ou apenas dados XML
 incorporados em um fluxo existente.
 A falta de uma API que funcione com fluxos já abertos faz com que as pessoas
 desenvolvedoras dependam de soluções alternativas, por exemplo, lendo o fluxo
-inteiramente para a memória e depois usando as APIs do `XMLReader`, ou
-escrevendo um arquivo XML usando o `XMLWriter` e tendo que passá-lo para um
-fluxo já aberto.
+inteiramente para a memória e depois usando as APIs da classe
+[`XMLReader`](/docs/php/doc/8/class.xmlreader.html), ou escrevendo um arquivo
+XML usando a classe [`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html) e tendo
+que passá-lo para um fluxo já aberto.
 Isso é um desperdício e desnecessariamente difícil.
 Esta RFC visa corrigir esse problema e também corrigir algumas outras
 inconsistências.
@@ -49,8 +54,10 @@ inconsistências.
 
 ### Proposta Principal
 
-Proponho adicionar dois novos métodos, um ao `XMLReader` e outro ao `XMLWriter`,
-para criar uma instância a partir de um fluxo.
+Proponho adicionar dois novos métodos, um à classe
+[`XMLReader`](/docs/php/doc/8/class.xmlreader.html) e outro à classe
+[`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html), para criar uma instância a
+partir de um fluxo.
 Aqui está como eles seriam:
 
 ```php
@@ -69,17 +76,19 @@ As assinaturas são fortemente inspiradas no método existente
 `public static XMLReader::open(string $uri, ?string $encoding = null, int $flags = 0): bool|XMLReader`
 que opera em arquivos.
 No entanto, uma grande diferença é que `XMLReader::fromStream()` é somente
-estático, enquanto os outros métodos de abertura do `XMLReader` podem ser
-chamados estaticamente ou não estaticamente e alterar o comportamento do valor
-de retorno dependendo disso.
+estático, enquanto os outros métodos de abertura da classe
+[`XMLReader`](/docs/php/doc/8/class.xmlreader.html) podem ser chamados
+estaticamente ou não estaticamente e alterar o comportamento do valor de retorno
+dependendo disso.
 A desvantagem dos métodos estáticos existentes é que eles só podem retornar uma
-instância de `XMLReader`, portanto quando `XMLReader` é herdado por uma
-subclasse da pessoa desenvolvedora, nos deparamos com o problema de ele não
-retornar um objeto do tipo correto.
+instância [`XMLReader`](/docs/php/doc/8/class.xmlreader.html), portanto quando
+[`XMLReader`](/docs/php/doc/8/class.xmlreader.html) é herdada por uma subclasse
+da pessoa desenvolvedora, nos deparamos com o problema de ela não retornar um
+objeto do tipo correto.
 Resolvemos isso escolhendo `static` como tipo de retorno e deixando o método
 chamar internamente o construtor do tipo estático (sem argumentos).
 Como parece que estamos nos afastando dos métodos sobrecarregados, decidi
-disponibilizar apenas a variante do método estático.
+disponibilizar apenas a variante estática do método.
 
 O parâmetro `$documentUri` é usado principalmente quando a `libxml` gera
 mensagens de erro, de modo que você pode colocar um nome de origem lá.
@@ -88,21 +97,26 @@ A assinatura do método `XMLWriter::toStream()` deve ser autoexplicativa.
 Ele também foi modelado como os outros métodos de abertura, mas é
 consideravelmente mais simples.
 Você também notará a ausência de um argumento de codificação, porque isso já é
-tratado pelo método `XMLWriter::startDocument()`.
+tratado pelo método
+[`XMLWriter::startDocument()`](/docs/php/doc/8/xmlwriter.startdocument.html).
 
 Ao implementar essa RFC, encontrei alguns comportamentos estranhos em relação ao
-parâmetro `?string $encoding` dos métodos existentes `XMLReader::open()` e
-`XMLReader::XML()`.
+parâmetro `?string $encoding` dos métodos existentes
+[`XMLReader::open()`](/docs/php/doc/8/xmlreader.open.html) e
+[`XMLReader::XML()`](/docs/php/doc/8/xmlreader.xml.html).
 O primeiro comportamento estranho é que eles emitem um alerta em vez de lançar
-um `ValueError` quando a codificação contém _bytes_ `NULL`.
+um [`ValueError`](/docs/php/doc/8/class.valueerror.html) quando a codificação
+contém _bytes_ `NULL`.
 Isso é inconsistente com como outros métodos lidam com isso.
-Proponho promover este alerta para `ValueError`.
+Proponho promover este alerta para
+[`ValueError`](/docs/php/doc/8/class.valueerror.html).
 O segundo comportamento estranho é que nomes de codificação inválidos são
 totalmente ignorados.
 Isso significa que eles não emitirão um alerta nem nada, apenas silenciosamente
 não definirão a codificação.
 Isso pode esconder bugs.
-Proponho também lançar um `ValueError` neste caso informando
+Proponho também lançar um [`ValueError`](/docs/php/doc/8/class.valueerror.html)
+neste caso informando
 `Argument #X ($encoding) must be a valid character encoding`.
 
 Uma versão anterior desta RFC propunha adicionar métodos `openStream()` a ambas
@@ -113,26 +127,32 @@ instância da respectiva classe.
 
 ### Consistência
 
-Estamos adicionando novos construtores nomeados estáticos às classes `XMLWriter`
-e `XMLReader`.
-No entanto, `XMLWriter` ainda não possui construtores estáticos e `XMLReader`
+Estamos adicionando novos construtores nomeados estáticos às classes
+[`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html) e
+[`XMLReader`](/docs/php/doc/8/class.xmlreader.html).
+No entanto, [`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html) ainda não possui
+construtores estáticos e [`XMLReader`](/docs/php/doc/8/class.xmlreader.html)
 possui esses métodos híbridos estáticos e de instância de que falamos
 anteriormente.
 Esses métodos existentes também não podem ser usados em subclasses porque
-retornam `XMLWriter` ou `XMLReader` em vez de `static`.
+retornam [`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html) ou
+[`XMLReader`](/docs/php/doc/8/class.xmlreader.html) em vez de
+[`static`](/docs/php/doc/8/language.oop5.static.html).
 
 A ideia é adicionar os seguintes construtores nomeados estáticos para
 consistência com os novos métodos propostos, com os mesmos argumentos de sua
 contraparte existente:
 
 - `XMLReader::fromUrl(string $url, ?string $encoding = null, int $flags = 0): static`
-  como uma nova versão de `XMLReader::open(...)`
+  como uma nova versão de
+  [`XMLReader::open(...)`](/docs/php/doc/8/xmlreader.open.html)
 - `XMLReader::fromString(string $source, ?string $encoding = null, int $flags = 0): static`
-  como uma nova versão de `XMLReader::XML(...)`
+  como uma nova versão de
+  [`XMLReader::XML(...)`](/docs/php/doc/8/xmlreader.xml.html)
 - `XMLWriter::toMemory(): static` como uma nova versão de
-  `XMLWriter::openMemory(...)`
+  [`XMLWriter::openMemory(...)`](/docs/php/doc/8/xmlwriter.openmemory.html)
 - `XMLWriter::toUrl(string $url): static` como uma nova versão de
-  `XMLWriter::openUri(...)`
+  [`XMLWriter::openUri(...)`](/docs/php/doc/8/xmlwriter.openuri.html)
 
 Observe que usei `Url` aqui em vez de `Uri` porque esse é o termo mais preciso:
 ele realmente localiza o recurso em vez de apenas identificá-lo.
@@ -146,18 +166,22 @@ desenvolvedoras aos novos construtores.
 Existem três quebras menores de compatibilidade com versões anteriores.
 
 A primeira é o fato de estarmos adicionando novos métodos.
-Se uma pessoa desenvolvedora estender a classe `XMLReader` ou `XMLWriter` e sua
-classe implementar um método com o mesmo nome, mas com uma assinatura
-incompatível, ocorrerá um erro de compilação.
+Se uma pessoa desenvolvedora estender a classe
+[`XMLReader`](/docs/php/doc/8/class.xmlreader.html) ou
+[`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html) e sua classe implementar um
+método com o mesmo nome, mas com uma assinatura incompatível, ocorrerá um erro
+de compilação.
 Analisei os 2.500 principais pacotes do Composer e nenhum usou nenhum dos nomes
-de métodos propostos nas subclasses das classes XML.
+de métodos propostos nas subclasses das classes
+[`XMLReader`](/docs/php/doc/8/class.xmlreader.html) ou
+[`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html).
 Isso significa que os 2.500 principais pacotes não sofrem quebra de
 compatibilidade com versões anteriores por causa disso.
 Isso não significa que não haverá nenhum, mas dá uma boa indicação.
 
 A segunda quebra de compatibilidade com versões anteriores é causada pelo
-lançamento de um `ValueError` ao usar codificações inválidas, em vez de
-ignorá-las silenciosamente.
+lançamento de um [`ValueError`](/docs/php/doc/8/class.valueerror.html) ao usar
+codificações inválidas, em vez de ignorá-las silenciosamente.
 Se não sinalizarmos a codificação inválida de alguma forma para a pessoa
 desenvolvedora, isso poderá ocultar falhas sutilmente.
 Por exemplo, isso pode ocultar erros de digitação ou passar silenciosamente
@@ -166,12 +190,15 @@ Forçar as pessoas desenvolvedoras a lidar explicitamente com esse erro resultar
 em um código mais robusto no final.
 
 A terceira quebra de compatibilidade com versões anteriores é a promoção do
-alerta de _byte_ `NULL` para um `ValueError`.
-Isso torna as classes `XMLReader` e `XMLWriter` mais consistentes com outras
+alerta de _byte_ `NULL` para um
+[`ValueError`](/docs/php/doc/8/class.valueerror.html).
+Isso torna as classes [`XMLReader`](/docs/php/doc/8/class.xmlreader.html) e
+[`XMLWriter`](/docs/php/doc/8/class.xmlwriter.html) mais consistentes com outras
 extensões que lançam erros em vez de emitir um alerta.
 A migração para pessoas desenvolvedoras deve ser bastante simples: em vez de
 silenciar o alerta e/ou verificar o valor de retorno do método, elas devem usar
-uma construção `try-catch` para tratar o erro.
+uma construção [`try-catch`](/docs/php/doc/8/language.exceptions.html) para
+tratar o erro.
 
 ## Exemplos de Uso
 
@@ -305,6 +332,6 @@ Nenhum ainda.
 - 0.10.1: Correções de linguagem.
 - 0.10.0: Estático novamente.
 - 0.9.2: Adicionou exemplos de uso das novas APIs.
-- 0.9.1: Tornou `XMLReader::openStream()` não estático, para que funcione com
+- 0.9.1: Tornou `XMLReader::openStream()` não estático, para funcionar com
   classes sobrescritas.
 - 0.9: Versão inicial em discussão.
