@@ -1,5 +1,5 @@
 ---
-source_url: https://wiki.php.net/rfc/xmlreader_writer_streams
+source_url: https://wiki.php.net/rfc/dom_additions_84
 revision: 1718313707
 status: wip
 license: https://www.php.net/copyright
@@ -9,114 +9,114 @@ license: https://www.php.net/copyright
 
 * Versão: 0.1
 * Data: 12/04/2024
-* Pessoas autoras: Niels Dossche, <nielsdos@php.net>
+* Pessoas autoras: [Niels Dossche][email-nielsdos]
 * Situação: Em votação
-* Publicada pela primeira vez em:
-  [https://wiki.php.net/rfc/dom_additions_84](https://wiki.php.net/rfc/dom_additions_84)
+* Primeira publicação: [Wiki do PHP][rfc-dom-additions-84]
 
 ## Introdução
 
 O ciclo de desenvolvimento do PHP 8.4 já viu duas melhorias importantes na
-extensão `ext-dom`:
-[suporte ao HTML 5](https://wiki.php.net/rfc/domdocument_html5_parser) e
-[conformidade opcional com a especificação DOM](https://wiki.php.net/rfc/opt_in_dom_spec_compliance).
-Esta RFC é (provavelmente) a última melhoria da `ext-dom` para o PHP 8.4: ela
-propõe adicionar novos recursos à extensão.
+extensão [`ext-dom`][doc-dom]: [suporte ao HTML 5][rfc-html5-parser] e
+[conformidade opcional com a especificação DOM][rfc-spec-compliance].
+Esta RFC é (provavelmente) a última melhoria da [`ext-dom`][doc-dom] para o PHP
+8.4: ela propõe adicionar novos recursos à extensão.
 Em particular, focaremos no suporte ao seletor CSS, preenchendo recursos
 ausentes, mas comuns, e adicionando novas propriedades.
-Essas melhorias e alterações se aplicam apenas às novas classes no namespace
+Essas melhorias e alterações se aplicam apenas às novas classes no _namespace_
 `Dom`.
 
-## Proposal
+## Proposta
 
-The RFC consists of multiple sub-proposals bundled together under one RFC to
-minimize overhead.
-In this section, we'll discuss each proposal separately.
+A RFC consiste em várias subpropostas agrupadas em uma RFC para minimizar a
+sobrecarga.
+Nesta seção, discutiremos cada proposta separadamente.
 
-### CSS selectors
+### Seletores CSS
 
-There exist multiple ways to query nodes in an XML or HTML document.
-The one that's already implemented since the existence of the DOM extension is
-using XPath.
-Another popular way, that people are likely more familiar with, is CSS
-selectors.
-In theory, every query you can write with CSS selectors can also be written with
-XPath.
-However, XPath is much more cumbersome to use in a lot of cases.
-For example, a simple query like ''p:contains("hello") + span'' is equivalent
-to ''./​/p[contains(normalize-space(),"hello")]/following-sibling::*[1]/self::
-span''.
-Things can get much more complicated when you use pseudo-functions like '':
-disabled'' which are a real pain to express in XPath.
+Existem várias maneiras de consultar nós em um documento XML ou HTML.
+Aquela já implementada desde a existência da extensão DOM está usando XPath.
+Outra forma popular, com a qual as pessoas provavelmente estão mais
+familiarizadas, são os seletores CSS.
+Em teoria, toda consulta que você pode escrever com seletores CSS também pode
+ser escrita com XPath.
+No entanto, em muitos casos, o XPath é muito mais complicado de usar.
+Por exemplo, uma consulta simples como `p:contains("hello") + span` é
+equivalente a
+`.//p[contains(normalize-space(),"hello")]/following-sibling: :*[1]/self::span`.
+As coisas podem ficar muito mais complicadas quando você usa pseudofunções
+como `:disabled`, que são muito difíceis de expressar em XPath.
 
-The DOM spec defines the following CSS selector functions:
-<PHP>
+A especificação DOM define as seguintes funções de seletor CSS:
+
+```php
 namespace Dom {
-interface ParentNode {
-public function querySelector(string $selectors): ?Element {}
-public function querySelectorAll(string $selectors): NodeList {}
+    interface ParentNode {
+        public function querySelector(string $selectors): ?Element {}
+        public function querySelectorAll(string $selectors): NodeList {}
+    }
+
+    class Element extends Node implements ParentNode {
+        public function closest(string $selectors): ?Element {}
+        public function matches(string $selectors): bool {}
+    }
 }
+```
 
-class Element extends Node implements ParentNode {
-public function closest(string $selectors): ?Element {}
-public function matches(string $selectors): bool {}
-}
-}
-</PHP>
+Isso é o que os métodos fazem:
 
-This is what the methods do:
+* `querySelector`: Retorna o primeiro elemento descendente que corresponde aos
+  seletores CSS.
+* `querySelectorAll`: Retorna uma [`NodeList`][doc-domnodelist] contendo todos
+  os elementos descendentes que correspondem aos seletores CSS.
+* `closest`: Encontra o ancestral mais próximo do elemento que corresponde aos
+  seletores CSS.
+* `matches`: Retorna `true` se o elemento corresponder aos seletores CSS, ou
+  `false`, caso contrário.
 
-* querySelector: Returns the first descendant element that matches the CSS
-  selectors
-* querySelectorAll: Returns a NodeList containing all descendant elements that
-  match the CSS selectors
-* closest: Finds the closest ancestor of the element that matches the CSS
-  selectors
-* matches: Returns true if the element matches the CSS selectors, false
-  otherwise
+Vale ressaltar que os seletores CSS podem conter pseudoclasses que só fazem
+sentido quando algo é renderizado na tela.
+Como, por exemplo, `:hover`, que corresponde quando uma pessoa usuária passa o
+mouse sobre um elemento.
+Como no contexto do PHP isso não faz sentido, um seletor CSS que usa tal
+pseudoclasse não corresponderá a nada.
 
-It's worth noting that CSS selectors can contain pseudo-classes that only make
-sense when something is rendered on screen.
-Like for example '':hover'', which matches when a user hovers over an element.
-Because in the context of PHP this is nonsensical, a CSS selector that uses such
-a pseudo-class will match nothing.
+Embora seja possível implementar `closest` e `matches` usando XPath, isso não
+pode ser feito com um bom desempenho (até onde eu sei).
 
-While it's possible to implement ''closest'' and ''matches'' using XPath, it
-cannot be done performance-efficiently (as far as I know).
+A biblioteca fundamental que usamos para análise do HTML5 também contém a
+funcionalidade CSS necessária para implementar esses métodos.
+Portanto, podemos obter a funcionalidade com relativa facilidade.
+Eu só tive que adaptar as estruturas de dados dos nós para corresponder às
+estruturas de dados do PHP.
 
-The underlying library we use for the HTML5 parsing also contains the CSS
-functionality necessary to implement these methods.
-Therefore, we can get the functionality relatively easily.
-I only had to adapt the node data structures to match PHP's data structures.
+Existem soluções alternativas criadas por pessoas desenvolvedoras que
+implementam uma tradução de seletores CSS para XPath, mas com base no que vi:
 
-There exist workarounds in userland that implement a CSS selector to XPath
-translation, but based on what I've seen:
+* Elas sofrerão um impacto no desempenho porque a tradução não é "gratuita".
+* Elas não fornecem uma forma eficiente de implementar `closest` e `matches`.
+* Como elas são implementadas em torno das antigas classes DOM, e as antigas
+  classes DOM não consideram os diferentes _namespaces_ HTML adequadamente, elas
+  também não consideram os _namespaces_ adequadamente.
 
-* They will take a performance hit because translation isn't "free"
-* They don't provide an efficient way to implement ''closest'' and ''matches''
-* Because they are implemented around the old DOM classes, and the old DOM
-  classes didn't take into account the different HTML namespaces properly, they
-  also don't take into account the namespaces properly.
+#### Exemplos
 
-=== Examples ===
+**Exemplo 1: `querySelector`**
 
-**Example 1: querySelector**
-
-<PHP>
+```php
 $dom = Dom\XMLDocument::createFromString(<<<XML
 <root>
   <span>1</span>
-  <p>hi</p>
+  <p>oi</p>
   <span>2</span>
 </root>
 XML);
 
 var_dump($dom->querySelector('p ~ span')->textContent); // string(1) "2"
-</PHP>
+```
 
-**Example 2: closest**
+**Exemplo 2: `closest`**
 
-<PHP>
+```php
 $dom = Dom\XMLDocument::createFromString(<<<XML
 <root>
   <div class="foo" xml:id="div1">
@@ -127,15 +127,13 @@ $dom = Dom\XMLDocument::createFromString(<<<XML
 </root>
 XML);
 
-var_dump($dom->getElementById('div3')->closest('div')->getAttribute("xml:
-id")); // string(4) "div3"
-var_dump($dom->getElementById('div3')->closest(':not(div[class])')->
-getAttribute("xml:id")); // string(4) "div2"
-</PHP>
+var_dump($dom->getElementById('div3')->closest('div')->getAttribute("xml:id")); // string(4) "div3"
+var_dump($dom->getElementById('div3')->closest(':not(div[class])')->getAttribute("xml:id")); // string(4) "div2"
+```
 
-**Example 3: matches**
+**Exemplo 3: `matches`**
 
-<PHP>
+```php
 $dom = Dom\XMLDocument::createFromString(<<<XML
 <root>
   <div xml:id="div1">
@@ -148,141 +146,143 @@ XML);
 
 var_dump($dom->getElementById('div3')->matches('div > div')); // bool(true)
 var_dump($dom->getElementById('div3')->matches('root > div')); // bool(false)
-</PHP>
+```
 
-### Element::$innerHTML
+### `Element::$innerHTML`
 
-This is a property on the Element class defined in the DOM
-spec: https://html.spec.whatwg.org/#the-innerhtml-property
+Esta é uma propriedade da classe [`Element`][doc-domelement] definida na
+[especificação DOM][spec-innerhtml]:
 
-<PHP>
+```php
 namespace Dom {
-  class Element /* ...
-*/ {
-    public string $innerHTML;
-  }
+    class Element /* ... */ {
+        public string $innerHTML;
+    }
 }
-</PHP>
+```
 
-Reading from this field will get the serialization of the inner content of the
-element, writing to it will parse a string into a subtree and replace the
-contents of the element with the new subtree.
-If the document is an HTML document, the HTML parser / serializer will be used.
-If the document is an XML document, the XML parser / serializer will be used.
-Yes, that means that inner**HTML** can set **XML** content, and this is as
-defined by spec.
-This naming oopsie is legacy baggage from the spec that stems from the fact that
-the Element class is shared between XML and HTML documents for interopability.
+A leitura deste campo obterá a serialização do conteúdo interno do elemento, a
+gravação nele transformará uma _string_ em uma subárvore e substituirá o
+conteúdo do elemento pela nova subárvore.
+Se o documento for um documento HTML, o analisador/serializador HTML será usado.
+Se o documento for um documento XML, o analisador/serializador XML será usado.
+Sim, isso significa que inner**HTML** pode definir conteúdo **XML**, e isso foi
+definido pelas especificações.
+Esse erro na nomenclatura é uma bagagem herdada da especificação que decorre
+do fato de que, por questões de interoperabilidade, a classe
+[`Element`][doc-domelement] é compartilhada entre documentos XML e HTML.
 
-If the serialization is not well-formed for XML, then a DOMException with <php>
-$code</php> DOM_SYNTAX_ERR will be thrown, as defined by the spec.
+Se a serialização não estiver bem formada para XML, uma
+[`DOMException`][doc-domexception] com `$code`
+[`DOM_SYNTAX_ERR`][doc-dom-syntax-err] será lançada, conforme definido pela
+especificação.
 
-Parsing documents (or fragments) can cause hard/soft errors.
-The soft errors are reported via warnings, or if the internal error handling
-mechanism is used then the errors are stored inside an array.
-Unless LIBXML_NOERROR is provided, in which case those soft errors are silenced.
-Note that we don't have a way to provide a parsing option to the innerHTML
-property, and so we cannot provide a way to silence the errors cleanly.
-I asked about this on the mailing list (https://externals.io/message/123224) but
-got no response.
-This probably means that people are uncertain or don't care, and so I choose to
-not implement the error reporting because it's easier to omit something and add
-it later than it is to remove something later.
+A análise de documentos (ou fragmentos) pode causar erros _hard_/_soft_.
+Os erros _soft_ são relatados por meio de alertas ou, se o mecanismo interno de
+tratamento de erros for usado, os erros serão armazenados em um _array_.
+A menos que [`LIBXML_NOERROR`][doc-libxml-noerror] seja fornecida, nesse caso
+esses erros _soft_ serão silenciados.
+Observe que não temos como fornecer uma opção de análise para a propriedade
+`innerHTML` e, portanto, não podemos fornecer uma maneira de silenciar os erros
+de maneira limpa.
+Perguntei sobre isso na [lista de discussão][message-123224], mas não obtive
+resposta.
+Isso provavelmente significa que as pessoas estão inseguras ou não se importam
+e, por isso, optei por não implementar o relatório de erros porque é mais fácil
+omitir algo e adicioná-lo mais tarde do que remover algo mais tarde.
 
-### New properties for Document
+### Novas propriedades para `Document`
 
-I propose the additional of several new properties to the Document class to make
-developing a bit easier:
+Proponho a adição de várias novas propriedades à classe
+[`Document`][doc-domdocument] para tornar o desenvolvimento um pouco mais fácil:
 
-<PHP>
+```php
 namespace Dom {
-  class HTMLElement extends Element {
-    /* There's an opportunity to add useful HTML-spec properties here for the future.
-*/
-  }
+    class HTMLElement extends Element {
+        /* Há uma oportunidade de adicionar propriedades úteis da especificação
+           HTML aqui no futuro. */
+    }
 
-class Document /* ...
-*/ {
-public ?HTMLElement $body;
-/** @readonly */
-public ?HTMLElement $head;
-public string $title;
+    class Document /* ... */ {
+        public ?HTMLElement $body;
+        /** @readonly */
+        public ?HTMLElement $head;
+        public string $title;
+    }
 }
-}
-</PHP>
+```
 
-These additions are described in the HTML addendum for the DOM specification
-in https://html.spec.whatwg.org/#document.
+Essas adições são descritas no
+[adendo da especificação HTML para o DOM][spec-document].
 
-The properties should be relatively self-explanatory.
-<php>$body</php> refers to the body element (if there is one), <php>$head</php>
-to the head element (if there is one), and <php>$title</php> to the text inside
-the title element (which in turn is inside the head element).
-You can read about all the details using the link above, because it's a bit more
-complicated when SVG is involved for example, but you should be familiar with
-these properties from Javascript.
+As propriedades devem ser relativamente autoexplicativas.
+`$body` refere-se ao elemento `body` (se houver), `$head` ao elemento `head`
+(se houver) e `$title` ao texto dentro do elemento `title` (que por sua vez está
+dentro do elemento `head`).
+Você pode ler sobre todos os detalhes usando o _link_ acima, porque é um pouco
+mais complicado quando SVG está envolvido, por exemplo, mas você deve estar
+familiarizado com essas propriedades do Javascript.
 
-As you can see, this requires adding the HTMLElement class as well.
-This class extends the Element class.
-In the future we may add properties on them too but this is left out of this RFC
-for now.
-Elements that are within the HTML namespace will now return an instance of
-HTMLElement instead of Element.
-For example, <php>$documentElement</php> is a property on the Document class of
-type Element.
-If this is an HTML element, we will get an instance of HTMLElement instead of
-Element.
-This is all as defined in the spec.
+Como você pode ver, isso também requer a adição da classe `HTMLElement`.
+Esta classe estende a classe [`Element`][doc-domelement].
+No futuro, poderemos adicionar propriedades a elas também, mas isso será deixado
+de fora desta RFC por enquanto.
+Os elementos que estão dentro do _namespace_ `HTML` agora retornarão uma
+instância de `HTMLElement` em vez de [`Element`][doc-domelement].
+Por exemplo, `$documentElement` é uma propriedade na classe
+[`Document`][doc-domdocument] do tipo [`Element`][doc-domelement].
+Se este for um elemento HTML, obteremos uma instância de `HTMLElement` em vez de
+[`Element`][doc-domelement].
+Tudo isso está definido nas especificações.
 
-### TokenList
+### `TokenList`
 
-I propose to add the TokenList class from the DOM specification to
-PHP (https://dom.spec.whatwg.org/#interface-domtokenlist):
+Proponho adicionar a
+[classe `TokenList` da especificação DOM][spec-domtokenlist] ao PHP:
 
-<PHP>
+```php
 namespace Dom {
-  /**
-   * @not-serializable
-   * @strict-properties
-   */
-  final class TokenList implements \IteratorAggregate, \Countable {
-    private function __construct() {}
+    /**
+    * @not-serializable
+    * @strict-properties
+    */
+    final class TokenList implements \IteratorAggregate, \Countable {
+        private function __construct() {}
 
-    /** @readonly */
-    public int $length;
-    public function item(int $index): ?string {}
-    public function contains(string $token): bool {}
-    public function add(string ...$tokens): void {}
-    public function remove(string ...$tokens): void {}
-    public function toggle(string $token, ?bool $force = null): bool {}
-    public function replace(string $token, string $newToken): bool {}
-    public function supports(string $token): bool {}
-    public string $value;
+        /** @readonly */
+        public int $length;
+        public function item(int $index): ?string {}
+        public function contains(string $token): bool {}
+        public function add(string ...$tokens): void {}
+        public function remove(string ...$tokens): void {}
+        public function toggle(string $token, ?bool $force = null): bool {}
+        public function replace(string $token, string $newToken): bool {}
+        public function supports(string $token): bool {}
+        public string $value;
 
-    public function count(): int {}
+        public function count(): int {}
 
-    public function getIterator(): \Iterator {}
-
+        public function getIterator(): \Iterator {}
+    }
 }
-}
-</PHP>
+```
 
-An instance of TokenList can be obtained via the <php>Element::$classList</php>
-property.
-As of now, its purpose is limited to managing the class names of an element, but
-the class is built in a way that it represents a set of tokens.
-On the surface level, it might seem trivial to manage the class names in
-documents, but that's not quite true.
-TokenList will consider the classes as a set, handle whitespace normalization,
-iteration, easy manipulations like toggling, ...
-all for you in an easy-to-use API.
+Uma instância de `TokenList` pode ser obtida através da propriedade
+`Element::$classList`.
+Por enquanto, seu propósito está limitado a gerenciar os nomes das classes de um
+elemento, mas a classe é construída para representar um conjunto de tokens.
+Superficialmente, pode parecer trivial gerenciar os nomes de classes em
+documentos, mas isso não é bem verdade.
+`TokenList` considerará as classes como um conjunto, lidará com normalização de
+espaços em branco, iteração, manipulações fáceis como alternância, etc., tudo
+disponível para você em uma API fácil de usar.
 
-=== Examples ===
+#### Exemplos
 
-**Example 1: Basic operations**
+**Exemplo 1: Operações básicas**
 
-<PHP>
-$dom = Dom\XMLDocument::createFromString("<root class='first second\tthird'/>");
+```php
+$dom = Dom\XMLDocument::createFromString("<root class='primeiro segundo\tterceiro'/>");
 $root = $dom->documentElement;
 $list = $root->classList;
 
@@ -292,119 +292,125 @@ object(Dom\TokenList)#3 (2) {
 ["length"]=>
 int(3)
 ["value"]=>
-string(18) "first second third"
+string(25) "primeiro segundo terceiro"
 }
 */
 
-var_dump($list->contains("second")); // bool(true)
-var_dump($list->toggle("second")); // bool(false)
-var_dump($root->className); // string(11) "first third"
+var_dump($list->contains("segundo")); // bool(true)
+var_dump($list->toggle("segundo")); // bool(false)
+var_dump($root->className); // string(17) "primeiro terceiro"
 
-$list->replace("third", "something-else");
-var_dump($list->item(1)); // string(14) "something-else"
-</PHP>
+$list->replace("terceiro", "outra-classe");
+var_dump($list->item(1)); // string(12) "outra-classe"
+```
 
-### PHP-specific additions
+### Adições Específicas do PHP
 
-The DOM extension already implements some PHP-specific extensions to the DOM
-classes, like normalization and canonicalization support.
-To better support some workloads, I propose the following PHP-specific
-additions:
+A extensão DOM já implementa algumas extensões específicas do PHP para as
+classes DOM, como suporte à normalização e canonização.
+Para melhor suportar algumas cargas de trabalho, proponho as seguintes adições
+específicas do PHP:
 
-<PHP>
+```php
 namespace Dom {
-  /**
-   * @not-serializable
-   * @strict-properties
-   */
-  final class NamespaceInfo
-  {
-    public readonly ?string $prefix;
-    public readonly ?string $namespaceURI;
-    public readonly Element $element;
+    /**
+    * @not-serializable
+    * @strict-properties
+    */
+    final class NamespaceInfo
+    {
+        public readonly ?string $prefix;
+        public readonly ?string $namespaceURI;
+        public readonly Element $element;
 
-    private function __construct() {}
+        private function __construct() {}
+    }
 
-}
-
-class Attr /* ...
-*/ {
-public function rename(?string $namespace, string $qualifiedName): void {}
-}
-
-class Element /* ...
-*/ {
-public string $substitutedNodeValue;
-
-    /** @return list<NamespaceInfo> */
-    public function getInScopeNamespaces(): array {}
-
-    /** @return list<NamespaceInfo> */
-    public function getDescendantNamespaces(): array {}
-
+class Attr /* ... */ {
     public function rename(?string $namespace, string $qualifiedName): void {}
-
 }
+
+class Element /* ... */ {
+    public string $substitutedNodeValue;
+
+        /** @return list<NamespaceInfo> */
+        public function getInScopeNamespaces(): array {}
+
+        /** @return list<NamespaceInfo> */
+        public function getDescendantNamespaces(): array {}
+
+        public function rename(?string $namespace, string $qualifiedName): void {}
+    }
 }
-</PHP>
+```
 
-Let's go over them one by one.
+Vamos examiná-las uma por uma.
 
-=== NamespaceInfo ===
+#### `NamespaceInfo`
 
-This class is the modern replacement of the <php>DOMNamespaceNode</php> class.
-<php>DOMNamespaceNode</php> is misdesigned in that it tries to be a Node, but it
-actually isn't a node because it's not in the tree.
-For example, in "old DOM", when using <php>getAttributeNode("xmlns")</php> it
-may return a <php>DOMNamespaceNode</php> for the namespace declaration even
-though there's not necessarily such an attribute.
-The other way you could obtain a <php>DOMNamespaceNode</php> instance is via
-XPath by using the ''namespace::*'' axis.
+Esta classe é a substituta moderna da classe
+[`DOMNamespaceNode`][doc-domnamespacenode].
+[`DOMNamespaceNode`][doc-domnamespacenode] foi mal projetada porque tenta ser um
+[`Node`][doc-domnode], mas, na verdade, não é um nó porque não está na árvore.
+Por exemplo, no "DOM antigo", ao usar `getAttributeNode("xmlns")`, ele pode
+retornar um [`DOMNamespaceNode`][doc-domnamespacenode] para a declaração de
+_namespace_, mesmo que não exista necessariamente tal atributo.
+A outra maneira de obter uma instância
+[`DOMNamespaceNode`][doc-domnamespacenode] é via XPath usando o eixo
+`namespace::*`.
 
-The reason we have the <php>DOMNamespaceNode</php> instance returned for XPath
-is because of some peculiar rules laid out
-by https://www.w3.org/TR/1999/REC-xpath-19991116/#namespace-nodes.
-In particular, the namespace axis needs to return all in-scope namespaces for an
-element.
-However that spec link //also// states:
+A razão pela qual retornamos a instância
+[`DOMNamespaceNode`][doc-domnamespacenode]
+para o XPath é devido a algumas regras peculiares estabelecidas pela
+[Recomendação do XPath][rec-namespace-nodes].
+Em particular, o eixo de _namespace_ precisa retornar todos os _namespaces_ em
+escopo de um elemento.
+No entanto, esse link da especificação _também_ afirma:
 
-<blockquote>Elements never share namespace nodes: if one element node is not the same node as another element node, then none of the namespace nodes of the one element node will be the same node as the namespace nodes of another element node.</blockquote>
+> Os elementos nunca compartilham nós de _namespace_: se um nó de elemento não
+> for o mesmo nó que outro nó de elemento, então nenhum dos nós de _namespace_
+> de um nó de elemento será o mesmo nó que os nós de _namespace_ de outro nó de
+> elemento.
 
-So we can't return the attribute node corresponding to the namespace
-declaration (if there even is one) because we'd have to return the //same//
-attribute node for //different// elements.
-Hence, the <php>DOMNamespaceNode</php> is returned in "old DOM".
-However, implementing this in "new DOM" is a problem because we'd be returning
-something from an XPath query that //isn't// a node.
-This is confusing for users and also for static analysis tools.
+Por isso, não podemos retornar o nó de atributo correspondente à declaração do
+_namespace_ (se houver) porque teríamos que retornar o _mesmo_ nó de atributo
+para elementos _diferentes_.
+Consequentemente, o [`DOMNamespaceNode`][doc-domnamespacenode] é retornado no
+"DOM antigo".
+No entanto, implementar isso no "novo DOM" é um problema porque estaríamos
+retornando algo de uma consulta XPath que _não é_ um nó.
+Isso é confuso para as pessoas usuárias e também para as ferramentas de análise
+estática.
 
-Because these APIs are also implemented by browsers, it's worth looking at how
-they solve this problem and what the spec says.
-Turns out this is all undocumented in the spec, and browsers don't implement the
-namespace axis at all.
+Como essas APIs também são implementadas por navegadores, vale a pena ver como
+eles resolvem esse problema e o que diz a especificação.
+Acontece que tudo isso não está documentado nas especificações e os navegadores
+não implementam o eixo de _namespace_.
 
-I propose to add two methods to "new DOM" that replace the namespace axis
-functionality: <php>getInScopeNamespaces</php> that replaces ''./namespace::*''
-and <php>getDescendantNamespaces</php> that replaces ''./​/namespace::*''.
-When users would try to query namespace nodes from the namespace axis in <php>
-Dom\XPath</php>, we'll throw a DOMException with <php>$code</php>
-DOM_NOT_SUPPORTED_ERR, redirecting users to use one of these two methods.
+Proponho adicionar dois métodos ao "novo DOM" que substituem a funcionalidade do
+eixo de _namespace_: `getInScopeNamespaces`, que substitui `./namespace::*` e
+`getDescendantNamespaces`, que substitui `.//namespace::*`.
+Quando as pessoas usuárias tentarem consultar nós de _namespace_ a partir do
+eixo de namespace em `Dom\XPath`, lançaremos uma
+[`DOMException`][doc-domexception] com `$code`
+[`DOM_NOT_SUPPORTED_ERR`][doc-dom-not-supported-err], redirecionando as pessoas
+usuárias para usar um desses dois métodos.
 
-To identify a namespace we only need to know the prefix, the uri, and the
-element it is scoped upon.
-Therefore, it has these three fields.
-It can only be constructed by the DOM extension, not by users.
-No node-specific properties will be implemented in <php>NamespaceInfo</php>.
+Para identificar um _namespace_, precisamos apenas saber o prefixo, o URI e o
+elemento com escopo definido.
+Portanto, ele possui esses três campos.
+Só pode ser construído pela extensão DOM, não pelas pessoas usuárias.
+Nenhuma propriedade específica do nó será implementada em `NamespaceInfo`.
 
-The main advantages are:
+As principais vantagens são:
 
-* The guarantee that XPath queries for nodes will always return nodes
-* Better static analysis results
-* Less confusion for users
+* A garantia de que as consultas XPath para nós sempre retornarão nós.
+* Melhores resultados de análise estática.
+* Menos confusão para as pessoas usuárias.
 
-== Examples ==
+##### Exemplos
 
-<PHP>
+```php
 $dom = Dom\XMLDocument::createFromString(<<<XML
 <root xmlns="urn:a">
     <b:sibling xmlns:b="urn:b" xmlns:d="urn:d" d:foo="bar">
@@ -416,120 +422,122 @@ XML);
 $sibling = $dom->documentElement->firstElementChild;
 var_dump($sibling->getInScopeNamespaces());
 var_dump($sibling->getDescendantNamespaces());
-</PHP>
+```
 
-**Example: getInscopeNamespaces() output**
+**Exemplo: saída de `getInscopeNamespaces()`**
 
-<code>
+```text
 array(3) {
-  [0]=>
-  object(Dom\NamespaceInfo)#2 (3) {
-    ["prefix"]=>
-    NULL
-    ["namespaceURI"]=>
-    string(5) "urn:a"
-    ["element"]=> ...
-(<b:sibling>)
-  }
-  [1]=>
-  object(Dom\NamespaceInfo)#4 (3) {
-    ["prefix"]=>
-    string(1) "b"
-    ["namespaceURI"]=>
-    string(5) "urn:b"
-    ["element"]=> ...
-(<b:sibling>)
-  }
-  [2]=>
-  object(Dom\NamespaceInfo)#5 (3) {
-    ["prefix"]=>
-    string(1) "d"
-    ["namespaceURI"]=>
-    string(5) "urn:d"
-    ["element"]=> ...
-(<b:sibling>)
-  }
+    [0]=>
+    object(Dom\NamespaceInfo)#2 (3) {
+        ["prefix"]=>
+        NULL
+        ["namespaceURI"]=>
+        string(5) "urn:a"
+        ["element"]=> ...
+        (<b:sibling>)
+    }
+    [1]=>
+    object(Dom\NamespaceInfo)#4 (3) {
+        ["prefix"]=>
+        string(1) "b"
+        ["namespaceURI"]=>
+        string(5) "urn:b"
+        ["element"]=> ...
+        (<b:sibling>)
+    }
+    [2]=>
+    object(Dom\NamespaceInfo)#5 (3) {
+        ["prefix"]=>
+        string(1) "d"
+        ["namespaceURI"]=>
+        string(5) "urn:d"
+        ["element"]=> ...
+        (<b:sibling>)
+    }
 }
-</code>
+```
 
-**Example: getInscopeNamespaces() output**
-<code>
+**Exemplo: saída de `getInScopeNamespaces()`**
+
+```text
 array(6) {
-[0]=>
-object(Dom\NamespaceInfo)#5 (3) {
-["prefix"]=>
-NULL
-["namespaceURI"]=>
-string(5) "urn:a"
-["element"]=> ...
-(<b:sibling>)
+    [0]=>
+    object(Dom\NamespaceInfo)#5 (3) {
+        ["prefix"]=>
+        NULL
+        ["namespaceURI"]=>
+        string(5) "urn:a"
+        ["element"]=> ...
+        (<b:sibling>)
+    }
+    [1]=>
+    object(Dom\NamespaceInfo)#4 (3) {
+        ["prefix"]=>
+        string(1) "b"
+        ["namespaceURI"]=>
+        string(5) "urn:b"
+        ["element"]=> ...
+        (<b:sibling>)
+    }
+    [2]=>
+    object(Dom\NamespaceInfo)#2 (3) {
+        ["prefix"]=>
+        string(1) "d"
+        ["namespaceURI"]=>
+        string(5) "urn:d"
+        ["element"]=> ...
+        (<b:sibling>)
+    }
+    [3]=>
+    object(Dom\NamespaceInfo)#6 (3) {
+        ["prefix"]=>
+        NULL
+        ["namespaceURI"]=>
+        string(5) "urn:a"
+        ["element"]=> ...
+        (<d:child>)
+    }
+    [4]=>
+    object(Dom\NamespaceInfo)#8 (3) {
+        ["prefix"]=>
+        string(1) "b"
+        ["namespaceURI"]=>
+        string(5) "urn:b"
+        ["element"]=> ...
+        (<d:child>)
+    }
+    [5]=>
+    object(Dom\NamespaceInfo)#9 (3) {
+        ["prefix"]=>
+        string(1) "d"
+        ["namespaceURI"]=>
+        string(6) "urn:d2"
+        ["element"]=> ...
+        (<d:child>)
+    }
 }
-[1]=>
-object(Dom\NamespaceInfo)#4 (3) {
-["prefix"]=>
-string(1) "b"
-["namespaceURI"]=>
-string(5) "urn:b"
-["element"]=> ...
-(<b:sibling>)
-}
-[2]=>
-object(Dom\NamespaceInfo)#2 (3) {
-["prefix"]=>
-string(1) "d"
-["namespaceURI"]=>
-string(5) "urn:d"
-["element"]=> ...
-(<b:sibling>)
-}
-[3]=>
-object(Dom\NamespaceInfo)#6 (3) {
-["prefix"]=>
-NULL
-["namespaceURI"]=>
-string(5) "urn:a"
-["element"]=> ...
-(<d:child>)
-}
-[4]=>
-object(Dom\NamespaceInfo)#8 (3) {
-["prefix"]=>
-string(1) "b"
-["namespaceURI"]=>
-string(5) "urn:b"
-["element"]=> ...
-(<d:child>)
-}
-[5]=>
-object(Dom\NamespaceInfo)#9 (3) {
-["prefix"]=>
-string(1) "d"
-["namespaceURI"]=>
-string(6) "urn:d2"
-["element"]=> ...
-(<d:child>)
-}
-}
-</code>
+```
 
-=== $substitutedNodeValue ===
+#### `$substitutedNodeValue`
 
-In "old DOM", the <php>$nodeValue</php> property performed entity substitution,
-which goes against the spec and can
-cause [[https://github.com/php/php-src/issues/8388|security issues]].
-In "new DOM", <php>$nodeValue</php> does not substitute entities (as intended by
-spec).
-However, that means we can no longer substitute entities //on purpose//.
-This isn't the most common use-case, but is sometimes necessary when dealing
-with XML //that you trust//.
-The <php>$substitutedNodeValue</php> property will be the node's value, but with
-entity substitution explicitly enabled.
+No "DOM antigo", a propriedade [`$nodeValue`][doc-nodevalue] realizava a
+substituição de entidade, o que vai contra as especificações e pode causar
+[problemas de segurança][issue-8388].
+No "novo DOM", [`$nodeValue`][doc-nodevalue] não substitui entidades (conforme
+pretendido pelas especificações).
+No entanto, isso significa que não podemos mais substituir entidades _de
+propósito_.
+Este não é o caso de uso mais comum, mas às vezes é necessário ao lidar com XML
+_que você confia_.
+A propriedade `$substitutedNodeValue` será o valor do nó, mas com a substituição
+de entidade explicitamente habilitada.
 
-== Examples ==
+##### Exemplos
 
-**Example 1: Setting the substituted value to a built-in entity**
+**Exemplo 1: Definir o valor substituído em uma entidade nativa**
 
-<PHP>
+```php
 $dom = Dom\XMLDocument::createFromString('<root/>');
 $root = $dom->documentElement;
 
@@ -537,294 +545,518 @@ $root->substitutedNodeValue = "&amp;";
 
 var_dump($root->textContent); // string(1) "&"
 
-// Note: this will escape the entity in accordance to the XML serialization
-rules
+// Nota: isso irá escapar a entidade conforme as regras de serialização do XML.
 echo $dom->saveXml(); // <root>&amp;</root>
-</PHP>
+```
 
-=== rename method ===
+#### Método `rename`
 
-This is only partially PHP-specific.
-This method did kind of exist
-in [[https://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/|DOM Core Level 3]],
-but was never implemented in PHP.
-It doesn't exist anymore in the living standard: the authors removed it to
-simplify the API and I think also because the DOM spec is more HTML-centric
-nowadays than XML-centric.
-We propose something very similar to what once existed in spec, but slightly
-improved.
+Esse método é apenas parcialmente específico do PHP.
+Ele existia no [DOM Core Level 3][spec-dom-level-3], mas nunca foi implementado
+no PHP.
+Ele não existe mais no padrão atual: os autores o removeram para simplificar a
+API e acho que também porque a especificação DOM é mais centrada em HTML hoje em
+dia do que em XML.
+Propomos algo muito semelhante ao que existia nas especificações, mas
+ligeiramente melhorado.
 
-Sometimes it's necessary to either change a namespace prefix for an
-element/attribute, change an element/attribute's name, or change its namespace
-URI.
-This use-case occurs when combining different documents, or fixing up documents,
-like for example with userland SOAP implementations.
-You can //kinda// do this today by recreating the entire subtree under an
-element with the new name, prefix, and namespace; but this is extremely annoying
-and difficult to get right.
-This approach also won't work if you have references to the same Element
-instance as now one piece of code is working on a new node while other pieces of
-code work on the old node.
+Às vezes é necessário alterar um prefixo de _namespace_ para um
+elemento/atributo, alterar o nome de um elemento/atributo ou alterar seu URI de
+_namespace_.
+Este caso de uso ocorre ao combinar diferentes documentos ou ao corrigir
+documentos, como, por exemplo, com implementações SOAP criadas por pessoas
+usuárias.
+Isso pode ser feito hoje recriando toda a subárvore sob um elemento com o novo
+nome, prefixo e _namespace_; mas isso é extremamente irritante e difícil de
+acertar.
+Essa abordagem também não funcionará se você tiver referências à mesma instância
+de [`Element`][doc-domelement], pois agora um trecho de código está
+funcionando em um novo nó enquanto outros trechos de código funcionam no nó
+antigo.
 
-It turns out that changing these properties is actually super easy to do
-internally, so it makes sense to just expose this functionality to the user.
+Acontece que alterar essas propriedades é realmente muito fácil de fazer
+internamente, então faz sentido apenas expor essa funcionalidade à pessoa
+usuária.
 
-You'll see that the rename method follows the same signature as the <php>
-createElementNS</php> method, and it also performs the same namespace-related
-sanity checks.
-These sanity checks ensure that the namespace-related rules are satisfied, and
-if they're not, the method will throw a ''NAMESPACE_ERR'' (or ''
-INVALID_CHARACTER_ERR'') type of <php>DOMException</php>.
+Você verá que o método rename segue a mesma assinatura do método
+[`createElementNS`][doc-createelementns] e também executa as mesmas verificações
+de integridade relacionadas ao _namespace_.
+Essas verificações de integridade garantem que as regras relacionadas ao
+_namespace_ sejam atendidas e, se não forem, o método lançará uma
+[`DOMException`][doc-domexception] do tipo
+[`NAMESPACE_ERR`][doc-dom-namespace-err]
+(ou [`INVALID_CHARACTER_ERR`][doc-dom-invalid-character-err]).
 
-<PHP>
-public function createElementNS(?string $namespace, string $qualifiedName): Element {} // in Dom\Document
-public function rename(?string $namespace, string $qualifiedName): void {} // In Dom\Element and Dom\Attr
-</PHP>
+```php
+public function createElementNS(?string $namespace, string $qualifiedName): Element {} // Em Dom\Document
+public function rename(?string $namespace, string $qualifiedName): void {} // Em Dom\Element e Dom\Attr
+```
 
-The first argument of the rename method allows you to change the namespace URI
-of the element/attribute, while the second one allows you to change the
-qualified name.
-The qualified name is the combination of the prefix and local name; or just the
-local name if there is no prefix.
-You may be wondering: "why not split this method up into multiple different
-methods?".
-The answer is that it's not possible to do: the namespace you choose has
-implications on what qualified names are allowed.
-Therefore, in some cases you have to change these two at the //same time//.
-It is of course possible to just change one of the two while keeping the other
-intact, but that must happen in accordance to the namespace-related rules.
+O primeiro argumento do método `rename` permite alterar o URI do _namespace_ do
+elemento/atributo, enquanto o segundo permite alterar o nome qualificado.
+O nome qualificado é a combinação do prefixo e do nome local; ou apenas o nome
+local se não houver nenhum prefixo.
+Você pode estar se perguntando: "Por que não dividir esse método em vários
+métodos diferentes?".
+A resposta é que isso não é possível: o _namespace_ escolhido tem implicações
+sobre quais nomes qualificados são permitidos.
+Portanto, em alguns casos você terá que alterar esses dois _simultaneamente_.
+É claro que é possível alterar apenas um dos dois enquanto mantém o outro
+intacto, mas isso deve acontecer conforme as regras relacionadas ao _namespace_.
 
-We have previously seen how elements in the HTML namespace will create an
-instance of ''HTMLElement'' instead of ''Element''.
-This imposes a restriction on the rename API because otherwise it becomes
-possible to create Elements in the HTML namespace or HTMLElements not in the
-HTML namespace.
-Therefore, if the element is in the HTML namespace, it must remain in that
-namespace; and if it's not in the HTML namespace, it may not enter the HTML
-namespace.
-If you try to do this, a DOMException with <php>$code</php>
-DOM_INVALID_MODIFICATION_ERR will be thrown.
+Vimos anteriormente como os elementos no _namespace_ `HTML` criarão uma
+instância
+de `HTMLElement` em vez de [`Element`][doc-domelement].
+Isso impõe uma restrição à API `rename` porque, caso contrário, será possível
+criar um [`Element`][doc-domelement] no _namespace_ `HTML` ou um `HTMLElement`
+que não esteja no namespace `HTML`.
+Portanto, se o elemento estiver no _namespace_ `HTML`, ele deverá permanecer
+nesse _namespace_; e se não estiver no _namespace_ `HTML`, não poderá entrar no
+_namespace_ `HTML`.
+Se você tentar fazer isso, uma [`DOMException`][doc-domexception] com `$code`
+[`DOM_INVALID_MODIFICATION_ERR`][doc-dom-invalid-modification-err] será lançada.
 
-== Examples ==
+##### Exemplos
 
-**Example 1: Basic operation on an element**
+**Exemplo 1: Operação básica em um elemento**
 
-<PHP>
+```php
 $dom = Dom\XMLDocument::createFromString('<root/>');
 $root = $dom->documentElement;
-$root->rename(NULL, 'document');
+$root->rename(NULL, 'documento');
 
-echo $dom->saveXml(); // <document/>
+echo $dom->saveXml(); // <documento/>
 
-$root->rename('urn:test', 'document');
+$root->rename('urn:teste', 'documento');
 
-echo $root->namespaceURI; // urn:test
+echo $root->namespaceURI; // urn:teste
 var_dump($root->prefix); // NULL
-echo $dom->saveXml(); // <document xmlns="urn:test"/>
+echo $dom->saveXml(); // <documento xmlns="urn:teste"/>
 
-$root->rename('urn:test', 'prefix:document');
+$root->rename('urn:teste', 'prefixo:documento');
 
-echo $root->namespaceURI; // urn:test
-var_dump($root->prefix); // prefix
-echo $dom->saveXml(); // <prefix:document xmlns:prefix="urn:test"/>
-</PHP>
+echo $root->namespaceURI; // urn:teste
+var_dump($root->prefix); // prefixo
+echo $dom->saveXml(); // <prefixo:documento xmlns:prefixo="urn:teste"/>
+```
 
-**Example 2: Changing an HTML element's name**
+**Exemplo 2: Alterando o nome de um elemento HTML**
 
-<PHP>
-$dom = Dom\HTMLDocument::createFromString('<p>hello</p>', LIBXML_NOERROR);
+```php
+$dom = Dom\HTMLDocument::createFromString('<p>olá</p>', LIBXML_NOERROR);
 $p = $dom->getElementsByTagName('p')[0];
 
 $p->rename($p->namespaceURI, 'span');
 
-echo $dom->saveHTML(); // <html><head></head><body><span>
-hello</span></body></html>
-</PHP>
+echo $dom->saveHTML(); // <html><head></head><body><span>olá</span></body></html>
+```
 
-**Example 3: Changing an attribute's name**
+**Exemplo 3: Alterando o nome de um atributo**
 
-<PHP>
+```php
 $dom = Dom\HTMLDocument::createFromString('<p align="center"></p>', LIBXML_NOERROR);
 $p = $dom->getElementsByTagName('p')[0];
 $attr = $p->getAttributeNode('align');
 
 $attr->rename($attr->namespaceURI, 'title');
 
-echo $dom->
-saveHTML(); // <html><head></head><body><p title="center"></p></body></html>
-</PHP>
+echo $dom->saveHTML(); // <html><head></head><body><p title="center"></p></body></html>
+```
 
-**Example 4: Changing an element's prefix, keeping the rest intact (special-case
-example)**
+**Exemplo 4: Alterar o prefixo de um elemento, mantendo o restante intacto
+(exemplo de caso especial)**
 
-<PHP>
-$dom = Dom\XMLDocument::createFromString('<prefix:root xmlns:prefix="urn:x"/>');
+```php
+$dom = Dom\XMLDocument::createFromString('<prefixo:root xmlns:prefixo="urn:x"/>');
 $root = $dom->documentElement;
-$root->rename($root->namespaceURI, 'foo:' .
-$root->localName);
+$root->rename($root->namespaceURI, 'foo:' . $root->localName);
 
-// Prefix changed, but not in serialization due to the namespace urn:x being
-bound to "prefix" by the attribute
+// Prefixo alterado, mas não na serialização devido ao namespace urn:x estar
+// vinculado ao "prefixo" pelo atributo.
 var_dump($root->prefix); // string(3) "foo"
-echo $dom->saveXML(); // <prefix:root xmlns:prefix="urn:x"/>
+echo $dom->saveXML(); // <prefixo:root xmlns:prefixo="urn:x"/>
 
-// We fix this by either renaming the attribute or removing it
-$root->removeAttribute('xmlns:prefix');
+// Corrigimos isso renomeando o atributo ou removendo-o.
+$root->removeAttribute('xmlns:prefixo');
 echo $dom->saveXML(); // <foo:root xmlns:foo="urn:x"/>
-</PHP>
+```
 
-### Allowing PHP-specific developer experience improvements
+### Permitindo Melhorias Específicas do PHP na Experiência da Pessoa Desenvolvedora
 
-DOM functions like <php>Element::insertAdjacentElement(string $where, Element
-$element)</php> and <php>Element::insertAdjacentText(string $where, string
-$data)</php> have a first "where" argument.
-There are only four valid values for "where": "beforebegin", "afterbegin", "
-beforeend", "afterend".
-So that's actually an enum in disguise.
-I propose to make use of the PHP enum feature.
-This would prevent programming mistakes and make IDE hints much nicer,
-contributing to a better developer experience.
-Strictly speaking, this deviates from the DOM spec, but we already model the DOM
-classes in a way that fits PHP's OOP model anyway.
-In fact, I'd propose to allow the use of enums where it makes sense in the
-extension for new APIs.
-Since the Element class didn't exist prior to the opt-in spec compliance RFC, we
-can change the signature without affecting users as no releases of PHP 8.4 have
-been made so far.
+Funções DOM como
+[`Element::insertAdjacentElement(string $where, Element $element)`][doc-insertadjacentelement]
+e
+[`Element::insertAdjacentText(string $where, string $data)`][doc-insertadjacenttext]
+têm um primeiro argumento `$where`.
+Existem apenas quatro valores válidos para `$where`: `"beforebegin"`,
+`"afterbegin"`, `"foreend"`, `"afterend"`.
+Então, na verdade, isso é uma _enum_ disfarçada.
+Proponho usar o recurso [`enum`][doc-enum] do PHP.
+Isso evitaria erros de programação e tornaria as dicas do IDE muito mais
+agradáveis, contribuindo para uma melhor experiência da pessoa desenvolvedora.
+Estritamente falando, isso se desvia das especificações do DOM, mas, de qualquer
+forma, já modelamos as classes DOM de uma forma que se ajusta ao modelo OOP do
+PHP.
+Na verdade, eu proporia permitir o uso de _enums_ onde fizer sentido na extensão
+para novas APIs.
+Como a classe `Element` não existia antes da
+[RFC de conformidade opcional com a especificação DOM][rfc-spec-compliance],
+podemos alterar a assinatura sem afetar os usuários, já que nenhuma versão do
+PHP 8.4 foi feita até agora.
 
-In particular, this will result in the following enum and function signatures:
-<PHP>
+Em particular, isso resultará nas seguintes assinaturas de função e _enum_:
+
+```php
 namespace Dom {
-enum AdjacentPosition : string {
-case BeforeBegin = "beforebegin";
-case AfterBegin = "afterbegin";
-case BeforeEnd = "beforeend";
-case AfterEnd = "afterend";
+    enum AdjacentPosition : string {
+        case BeforeBegin = "beforebegin";
+        case AfterBegin = "afterbegin";
+        case BeforeEnd = "beforeend";
+        case AfterEnd = "afterend";
+    }
+
+    class Element /* ... */ {
+        public function insertAdjacentElement(AdjacentPosition $where, Element $element): ?Element {}
+        public function insertAdjacentText(AdjacentPosition $where, string $data): void {}
+    }
 }
+```
 
-class Element /* ...
-*/ {
-public function insertAdjacentElement(AdjacentPosition $where, Element
-$element): ?Element {}
-public function insertAdjacentText(AdjacentPosition $where, string $data):
-void {}
-}
-}
-</PHP>
+A _enum_ `AdjacentPosition` é apoiada de forma que os valores literais da
+especificação DOM ainda possam ser usados usando
+`AdjacentPosition::from("beforebegin")`, etc.
 
-The <php>AdjacentPosition</php> enum is backed such that the literal values from
-the DOM spec can still be used by using <php>AdjacentPosition::from("
-beforebegin")</php> etc.
+### Emendas de API
 
-### API amendments
+Inicialmente, a
+[RFC de conformidade opcional com a especificação DOM][rfc-spec-compliance]
+copiou as APIs existentes das antigas classes DOM sem mudanças para a maioria
+das APIs.
+Alguém relatou que `(DOM)Document::xinclude()` tem um comportamento estranho de
+valor de retorno.
+Em particular, citando a documentação:
 
-Initially, the [DOM spec-compliance RFC][rfc-opt-in-dom-spec-compliance] copied
-the existing APIs from the old DOM classes without a deviation for most APIs.
-Someone reported that the <php>(DOM)Document::xinclude()</php> has weird return
-value behaviour.
-In particular, quoting from the documentation:
-<blockquote>Returns the number of XIncludes in the document, -1 if some processing failed, or false if there were no substitutions.
-</blockquote>
-This seems to be caused by an implementation mistake.
-The more sensical behaviour would be to throw on failure (to avoid 0/false confusion), and return the number of substitutions on success.
-If there were no substitutions the number 0 should be returned.
+> Retorna o número de `XIncludes` no documento, -1 se algum processamento falhou
+> ou `false` se não houve substituições.
 
-The new signature of this function would look like this:
-<PHP>
+Isso parece ser causado por um erro de implementação.
+O comportamento mais sensato seria lançar um erro em caso de falha (para evitar
+confusão com `0`/`false`) e retornar o número de substituições em caso de
+sucesso.
+Se não houve substituições o número 0 deverá ser retornado.
+
+A nova assinatura desta função ficaria assim:
+
+```php
 final class XMLDocument extends Document {
-public function xinclude(int $options = 0): int {}
+    public function xinclude(int $options = 0): int {}
 }
-</PHP>
+```
 
-The exception thrown will be DOMException with <php>$code</php> set to
-INVALID_MODIFICATION_ERR.
+A exceção lançada será [`DOMException`][doc-domexception] com `$code` definido
+como [`DOM_INVALID_MODIFICATION_ERR`][doc-dom-invalid-modification-err].
 
-## Backward Incompatible Changes
+## Alterações Incompatíveis com Versões Anteriores
 
-None because this RFC only affects classes added in 8.4.
+Nenhum porque esta RFC afeta apenas as classes adicionadas na versão 8.4.
 
-## Proposed PHP Version(s)
+## Versões Propostas do PHP
 
 PHP 8.4.
 
-## RFC Impact
+## Impacto da RFC
 
-### To Existing Extensions
+### Para Extensões Existentes
 
-Only ext-dom is affected.
+Apenas a [`ext-dom`][doc-dom] é afetada.
 
-## Open Issues
+## _Issues_ Abertas
 
-None yet.
+Nenhuma ainda.
 
-## Unaffected PHP Functionality
+## Funcionalidade PHP Não Afetada
 
-Everything outside ext-dom.
+Tudo fora da [`ext-dom`][doc-dom].
 
-## Future Scope
+## Escopo Futuro
 
-I initially planned on including the outerHTML property too.
-This is very feasible with all the internal DOM work that happened during the
-PHP 8.4 development cycle.
-However, given that I haven't seen demand for this, I think my time is better
-spent with other features.
-If someone really wants this in 8.4, feel free to make a PoC implementation,
-should be fairly doable using Lexbor and the current ext-dom internal APIs.
+Inicialmente planejei incluir a propriedade `outerHTML` também.
+Isso é muito viável com todo o trabalho interno do DOM que aconteceu durante o
+ciclo de desenvolvimento do PHP 8.4.
+Porém, como não tenho visto demanda por isso, acho que meu tempo será melhor
+gasto com outros recursos.
+Se alguém realmente quiser isso no PHP 8.4, sinta-se à vontade para fazer uma
+implementação de PoC, deve ser bastante viável usando Lexbor e as atuais APIs
+internas da [`ext-dom`][doc-dom].
 
-The <php>HTMLElement</php> class can offer some useful properties but that's
-left out of here because no one really asked for that feature so far, so
-development time is better spent elsewhere.
+A classe `HTMLElement` pode oferecer algumas propriedades úteis, mas isso foi
+deixado de fora porque ninguém realmente solicitou esse recurso até agora, então
+o tempo de desenvolvimento é melhor gasto em outro lugar.
 
-## Proposed Voting Choices
+## Escolhas de Votação Propostas
 
-One primary yes/no vote with 2/3 majority to accept this proposal as a whole.
+Uma votação primária sim/não com maioria de 2/3 para aceitar esta proposta na
+totalidade.
 
-Voting started on 2024-06-10 and will end on 2024-06-24.
+A votação começou em 10/06/2024 e terminará em 24/06/2024.
 
-<doodle title="Accept PHP 8.4 DOM additions RFC?" auth="nielsdos" voteType="single" closed="false" closeon="2024-06-24T21:00:00+02:00">
-   * Yes
-   * No
-</doodle>
+### Aceita a RFC de Adições ao DOM no PHP 8.4?
 
-## Patches and Tests
+| Nome                                                | Sim | Não |
+|-----------------------------------------------------|:---:|:---:|
+| [adiel][user-adiel] (adiel)                         |  X  |     |
+| [ashnazg][user-ashnazg] (ashnazg)                   |  X  |     |
+| [beberlei][user-beberlei] (beberlei)                |  X  |     |
+| [crell][user-crell] (crell)                         |  X  |     |
+| [devnexen][user-devnexen] (devnexen)                |  X  |     |
+| [galvao][user-galvao] (galvao)                      |  X  |     |
+| [girgias][user-girgias] (girgias)                   |  X  |     |
+| [heiglandreas][user-heiglandreas] (heiglandreas)    |  X  |     |
+| [jimw][user-jimw] (jimw)                            |  X  |     |
+| [josh][user-josh] (josh)                            |  X  |     |
+| [kguest][user-kguest] (kguest)                      |  X  |     |
+| [kocsismate][user-kocsismate] (kocsismate)          |  X  |     |
+| [levim][user-levim] (levim)                         |  X  |     |
+| [mauricio][user-mauricio] (mauricio)                |  X  |     |
+| [mbeccati][user-mbeccati] (mbeccati)                |  X  |     |
+| [nicolasgrekas][user-nicolasgrekas] (nicolasgrekas) |  X  |     |
+| [nielsdos][user-nielsdos] (nielsdos)                |  X  |     |
+| [petk][user-petk] (petk)                            |  X  |     |
+| [pierrick][user-pierrick] (pierrick)                |  X  |     |
+| [ramsey][user-ramsey] (ramsey)                      |  X  |     |
+| [sebastian][user-sebastian] (sebastian)             |  X  |     |
+| [sergey][user-sergey] (sergey)                      |  X  |     |
+| [theodorejb][user-theodorejb] (theodorejb)          |  X  |     |
+| [timwolla][user-timwolla] (timwolla)                |  X  |     |
+| [weierophinney][user-weierophinney] (weierophinney) |  X  |     |
+| **Total**                                           | 25  |  0  |
 
-- CSS selector implementation: https://github.com/php/php-src/pull/13819
-- innerHTML implementation: https://github.com/nielsdos/php-src/pull/104
-- TokenList implementation: https://github.com/php/php-src/pull/13664
-- HTMLDocument properties
-  implementation: https://github.com/php/php-src/pull/13791
-- PHP-specific extensions
-  implementation: https://github.com/nielsdos/php-src/pull/93
+## _Patches_ e Testes
 
-## Implementation
+- [Implementação do seletor CSS][pull-13819]
+- [Implementação de `innerHTML`][pull-104]
+- [Implementação de `TokenList`][pull-13664]
+- [Implementação de propriedades de `HTMLDocument`][pull-13791]
+- [Implementação de extensões específicas do PHP][pull-93]
 
-After the project is implemented, this section should contain
+## Implementação
 
-- the version(s) it was merged into
-- a link to the git commit(s)
-- a link to the PHP manual entry for the feature
-- a link to the language specification section (if any)
+Depois que o projeto for implementado, esta seção deverá conter:
 
-## References
+- as versões nas quais foi feito o _merge_
+- um link para os _commits_ do git
+- um link para a entrada no manual do PHP para o recurso
+- um link para a seção de especificação da linguagem (se houver)
 
-- innerHTML error handling: https://externals.io/message/123224
-- DOM spec: https://dom.spec.whatwg.org/
-- HTML spec that defines DOM addendums: https://html.spec.whatwg.org
-- Old feature request for getting in scope
-  namespaces: https://bugs.php.net/bug.php?id=63410
-- Feature request for TokenList: https://github.com/php/php-src/issues/11688
-- Discussion (externals.io): https://externals.io/message/123405
+## Referências
 
-## Changelog
+- [Tratamento de erros de `innerHTML`][message-123224]
+- [Especificação DOM][spec-dom]
+- [Especificação HTML que define adendos ao DOM][spec-html]
+- [Antiga solicitação do recurso para obter _namespaces_ em escopo][bug-63410]
+- [Solicitação de recurso para `TokenList`][issue-11688]
+- [Discussão (externals.io)][message-123405]
 
-* 0.1: First version put under discussion and voting
+## _Changelog_
 
-## Acknowledgements
+* 0.1: Primeira versão colocada em discussão e votação
 
-I'd like to thank [[https://github.com/veewee/|Toon Verwerft]] for his feedback
-and early testing.
+## Agradecimentos
 
-[rfc-domdocument-html5-parser-html-5-support-and-rfc-opt-in-dom-spec-compliance]: https://wiki.php.net/rfc/domdocument_html5_parser%7CHTML+5+support%5D%5D%2C+and+%5B%5Brfc%3Aopt_in_dom_spec_compliance
+Gostaria de agradecer a [Toon Verwerft][user-veewee] por seus comentários e
+testes iniciais.
 
-[rfc-opt-in-dom-spec-compliance]: https://wiki.php.net/rfc/opt_in_dom_spec_compliance
+[bug-63410]:
+https://bugs.php.net/bug.php?id=63410
 
+[doc-createelementns]:
+/docs/php/doc/8/domdocument.createelementns.html
+
+[doc-dom]:
+/docs/php/doc/8/book.dom.html
+
+[doc-dom-invalid-character-err]:
+/docs/php/doc/8/dom.constants.html#constant.dom-invalid-character-err
+
+[doc-dom-invalid-modification-err]:
+/docs/php/doc/8/dom.constants.html#constant.dom-invalid-modification-err
+
+[doc-dom-namespace-err]:
+/docs/php/doc/8/dom.constants.html#constant.dom-namespace-err
+
+[doc-dom-not-supported-err]:
+/docs/php/doc/8/dom.constants.html#constant.dom-not-supported-err
+
+[doc-dom-syntax-err]:
+/docs/php/doc/8/dom.constants.html#constant.dom-syntax-err
+
+[doc-domdocument]:
+/docs/php/doc/8/class.domdocument.html
+
+[doc-domelement]:
+/docs/php/doc/8/class.domelement.html
+
+[doc-domexception]:
+/docs/php/doc/8/class.domexception.html
+
+[doc-domnamespacenode]:
+/docs/php/doc/8/class.domnamespacenode.html
+
+[doc-domnode]:
+/docs/php/doc/8/class.domnode.html
+
+[doc-domnodelist]:
+/docs/php/doc/8/class.domnodelist.html
+
+[doc-enum]:
+/docs/php/doc/8/language.enumerations.html
+
+[doc-insertadjacentelement]:
+/docs/php/doc/8/domelement.insertadjacentelement.html
+
+[doc-insertadjacenttext]:
+build/docs/php/doc/8/domelement.insertadjacenttext.html
+
+[doc-libxml-noerror]:
+/docs/php/doc/8/libxml.constants.html#constant.libxml-noerror
+
+[doc-nodevalue]:
+/docs/php/doc/8/class.domnode.html#domnode.props.nodevalue
+
+[email-nielsdos]:
+mailto:nielsdos@php.net
+
+[issue-8388]:
+https://github.com/php/php-src/issues/8388
+
+[issue-11688]:
+https://github.com/php/php-src/issues/11688
+
+[message-123224]:
+https://externals.io/message/123224
+
+[message-123405]:
+https://externals.io/message/123405
+
+[pull-93]:
+https://github.com/nielsdos/php-src/pull/93
+
+[pull-104]:
+https://github.com/nielsdos/php-src/pull/104
+
+[pull-13664]:
+https://github.com/php/php-src/pull/13664
+
+[pull-13791]:
+https://github.com/php/php-src/pull/13791
+
+[pull-13819]:
+https://github.com/php/php-src/pull/13819
+
+[rfc-dom-additions-84]:
+https://wiki.php.net/rfc/dom_additions_84
+
+[rfc-html5-parser]:
+https://wiki.php.net/rfc/domdocument_html5_parser
+
+[rfc-spec-compliance]:
+https://wiki.php.net/rfc/opt_in_dom_spec_compliance
+
+[rec-namespace-nodes]:
+https://www.w3.org/TR/1999/REC-xpath-19991116/#namespace-nodes
+
+[spec-document]:
+https://html.spec.whatwg.org/#document
+
+[spec-dom]:
+https://dom.spec.whatwg.org/
+
+[spec-dom-level-3]:
+https://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/
+
+[spec-domtokenlist]:
+https://dom.spec.whatwg.org/#interface-domtokenlist
+
+[spec-html]:
+https://html.spec.whatwg.org
+
+[spec-innerhtml]:
+https://html.spec.whatwg.org/#the-innerhtml-property
+
+[user-adiel]:
+https://people.php.net/adiel
+
+[user-ashnazg]:
+https://people.php.net/ashnazg
+
+[user-beberlei]:
+https://people.php.net/beberlei
+
+[user-crell]:
+https://people.php.net/crell
+
+[user-devnexen]:
+https://people.php.net/devnexen
+
+[user-galvao]:
+https://people.php.net/galvao
+
+[user-girgias]:
+https://people.php.net/girgias
+
+[user-heiglandreas]:
+https://people.php.net/heiglandreas
+
+[user-jimw]:
+https://people.php.net/jimw
+
+[user-josh]:
+https://people.php.net/josh
+
+[user-kguest]:
+https://people.php.net/kguest
+
+[user-kocsismate]:
+https://people.php.net/kocsismate
+
+[user-levim]:
+https://people.php.net/levim
+
+[user-mauricio]:
+https://people.php.net/mauricio
+
+[user-mbeccati]:
+https://people.php.net/mbeccati
+
+[user-nicolasgrekas]:
+https://people.php.net/nicolasgrekas
+
+[user-nielsdos]:
+https://people.php.net/nielsdos
+
+[user-petk]:
+https://people.php.net/petk
+
+[user-pierrick]:
+https://people.php.net/pierrick
+
+[user-ramsey]:
+https://people.php.net/ramsey
+
+[user-sebastian]:
+https://people.php.net/sebastian
+
+[user-sergey]:
+https://people.php.net/sergey
+
+[user-theodorejb]:
+https://people.php.net/theodorejb
+
+[user-timwolla]:
+https://people.php.net/timwolla
+
+[user-veewee]:
+https://github.com/veewee/
+
+[user-weierophinney]:
+https://people.php.net/weierophinney

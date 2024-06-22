@@ -9,7 +9,7 @@ license: https://www.php.net/copyright
 
 * Versão: 1.0
 * Data: 11/04/2024
-* Pessoas autoras: Matteo Beccati, mbeccati@php.net
+* Pessoas autoras: Matteo Beccati <mbeccati@php.net>
 * Situação: Implementada
 * Versão alvo: 8.4
 * Implementação:
@@ -169,7 +169,7 @@ Uma das soluções alternativas atualmente viáveis é usar pontos de interroga�
 com escape dentro de _strings_ delimitadas por cifrão para evitar a detecção
 inesperada de espaços reservados.
 A última versão da implementação ainda permite isso, embora gere o seguinte
-aviso de descontinuação:
+alerta de descontinuação:
 
 ```text
 Escaping question marks inside dollar quoted strings is not required anymore
@@ -339,9 +339,9 @@ O mesmo tópico também foi levantado por
 [outras pessoas na lista _internals_](https://externals.io/message/114016), mas
 ninguém teve tempo de seguir com uma RFC adequada.
 
-## Alterações incompatíveis com versões anteriores
+## Alterações Incompatíveis com Versões Anteriores
 
-Não há quebras de compatibilidade com versões anteriores, mas um aviso de
+Não há quebras de compatibilidade com versões anteriores, mas um alerta de
 descontinuação será gerado ao usar a solução alternativa "pontos de interrogação
 com escape dentro de _strings_ delimitadas por cifrão" descrita anteriormente.
 
